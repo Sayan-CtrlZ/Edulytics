@@ -316,9 +316,9 @@ export function DataInputSheet() {
       </CardHeader>
       <CardContent>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-            <div className="flex flex-wrap gap-2 items-center">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-center w-full">
                 <Select value={classValue} onValueChange={setClassValue}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Select Class" />
                   </SelectTrigger>
                   <SelectContent>
@@ -326,7 +326,7 @@ export function DataInputSheet() {
                   </SelectContent>
                 </Select>
                 <Select value={sectionValue} onValueChange={setSectionValue}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Select Section" />
                   </SelectTrigger>
                   <SelectContent>
@@ -334,7 +334,7 @@ export function DataInputSheet() {
                   </SelectContent>
                 </Select>
                 <Select value={subjectValue} onValueChange={setSubjectValue}>
-                  <SelectTrigger className="w-[240px]">
+                  <SelectTrigger className="w-full sm:w-[240px]">
                     <SelectValue placeholder="Select Subject" />
                   </SelectTrigger>
                   <SelectContent>
@@ -342,18 +342,18 @@ export function DataInputSheet() {
                   </SelectContent>
                 </Select>
             </div>
-            <div className="flex gap-2">
-                <Button onClick={handleSave} size="sm" className="bg-primary text-primary-foreground shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button onClick={handleSave} size="sm" className="bg-primary text-primary-foreground shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 w-full">
                     <FileCheck className="mr-2" />
                     Generate Report
                 </Button>
-                <Button onClick={handleViewReport} size="sm" variant="outline">
+                <Button onClick={handleViewReport} size="sm" variant="outline" className="w-full">
                     View Dashboard
                 </Button>
           </div>
         </div>
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <div className="flex gap-2 flex-wrap">
             <Button onClick={addRow} size="sm" variant="default" className="bg-violet-600 hover:bg-violet-700">
               <PlusCircle className="mr-2" />
               Add Row
@@ -392,13 +392,13 @@ export function DataInputSheet() {
                 </AlertDialog>
             )}
           </div>
-          <Button onClick={downloadTemplate} size="sm" variant="link">
+          <Button onClick={downloadTemplate} size="sm" variant="link" className="p-0 h-auto">
               Download CSV Template
           </Button>
         </div>
         <div className="overflow-auto rounded-md border" style={{maxHeight: '40vh'}}>
           <Table>
-            <TableHeader className="sticky top-0 bg-muted/50">
+            <TableHeader className="sticky top-0 bg-muted/50 z-10">
               <TableRow>
                 <TableHead className="w-[70%]">Student Name</TableHead>
                 <TableHead className="w-[20%]">Marks</TableHead>

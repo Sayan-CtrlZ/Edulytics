@@ -2,7 +2,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import {
   Card,
   CardContent,
@@ -16,17 +16,19 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import type { Mark } from "@/lib/data";
+import { useTheme } from "next-themes";
 
 interface StudentsChartProps {
   data: Mark[];
 }
 
 export default function StudentsChart({ data }: StudentsChartProps) {
+  const { theme } = useTheme();
 
   const chartData = useMemo(() => {
     return data.map((s) => ({ name: s.studentName, value: s.marks, type: "Marks" }));
   }, [data]);
-
+  
   const chartConfig = {
     value: {
       label: "Marks",
@@ -82,10 +84,13 @@ export default function StudentsChart({ data }: StudentsChartProps) {
                 hideLabel
               />}
             />
-            <Bar dataKey="value" fill="var(--color-value)" radius={4} />
+            <Legend />
+            <Bar dataKey="value" fill={theme === 'dark' ? "hsl(var(--chart-1))" : "hsl(var(--primary))"} radius={4} name="Marks" />
           </BarChart>
         </ChartContainer>
       </CardContent>
     </Card>
   );
 }
+
+    

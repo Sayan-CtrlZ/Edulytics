@@ -15,6 +15,7 @@ import { Upload, Trash2, AreaChart } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type ReportStructure = {
   [className: string]: {
@@ -166,67 +167,69 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-4 sm:gap-8">
       <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
       
       {classes.length > 0 && (
-        <Tabs value={activeClassTab} onValueChange={setActiveClassTab}>
-          <TabsList className="relative flex flex-wrap h-auto justify-start">
-            {classes.map(className => (
-              <div key={className} className="relative group pr-8">
-                <TabsTrigger value={className}>{`Class ${className}`}</TabsTrigger>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="absolute top-1/2 right-1 -translate-y-1/2 h-6 w-6 opacity-50 group-hover:opacity-100 transition-opacity">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will permanently delete all reports for {`Class ${className}`}. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDeleteClassReport(className)}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            ))}
-          </TabsList>
+        <Tabs value={activeClassTab} onValueChange={setActiveClassTab} className="w-full">
+          <ScrollArea className="w-full whitespace-nowrap rounded-lg">
+            <TabsList className="relative flex flex-wrap sm:flex-nowrap h-auto justify-start p-1">
+              {classes.map(className => (
+                <div key={className} className="relative group pr-8">
+                  <TabsTrigger value={className}>{`Class ${className}`}</TabsTrigger>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="absolute top-1/2 right-1 -translate-y-1/2 h-6 w-6 opacity-50 group-hover:opacity-100 transition-opacity">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete all reports for {`Class ${className}`}. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDeleteClassReport(className)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              ))}
+            </TabsList>
+          </ScrollArea>
           {classes.map(className => (
             <TabsContent key={className} value={className} className="mt-4">
               <Accordion type="single" collapsible className="w-full">
                 {Object.keys(reportData[className]).sort().map(section => (
                   <AccordionItem key={section} value={section}>
                     <div className="flex justify-between items-center w-full">
-                        <AccordionTrigger className="text-xl font-semibold flex-grow">
-                          <span>{`Section ${section}`}</span>
-                        </AccordionTrigger>
-                        <AlertDialog onOpenChange={(open) => open && event.stopPropagation()} >
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-50 hover:opacity-100 mr-2" onClick={(e) => e.stopPropagation()}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action will permanently delete all reports for Section {section} in Class {className}.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteSectionReport(className, section)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                      <AccordionTrigger className="text-xl font-semibold flex-grow">
+                        <span>{`Section ${section}`}</span>
+                      </AccordionTrigger>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                           <Button variant="ghost" size="icon" className="h-8 w-8 opacity-50 hover:opacity-100 mr-2">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action will permanently delete all reports for Section {section} in Class {className}.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteSectionReport(className, section)}>Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
-                    <AccordionContent className="pl-4">
+                    <AccordionContent className="pl-0 sm:pl-4">
                       {Object.keys(reportData[className][section]).sort().map(subject => (
                         <div key={subject} className="mb-8 p-4 border rounded-lg">
                           <div className="flex justify-between items-center mb-4">
@@ -268,3 +271,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
