@@ -1,5 +1,19 @@
+
 {
   "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User Profile",
+      "type": "object",
+      "description": "Stores additional user profile information not available in Firebase Auth.",
+      "properties": {
+        "instituteName": {
+          "type": "string",
+          "description": "The name of the user's institute or school."
+        }
+      },
+      "required": []
+    },
     "School": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "School",
@@ -224,6 +238,22 @@
   },
   "firestore": {
     "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information like institute name.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user, matching their Firebase Auth UID."
+            }
+          ]
+        }
+      },
       {
         "path": "/schools/{schoolId}",
         "definition": {

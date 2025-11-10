@@ -1,3 +1,4 @@
+
 /**
  * @file Firestore Security Rules
  * @description This ruleset enforces a hierarchical data model with strict school-based ownership. All data is nested under /schools/{schoolId}, ensuring that data access is isolated to the appropriate school context.
@@ -117,6 +118,16 @@ service cloud.firestore {
       allow create: if isSignedIn() && request.resource.data.schoolId == schoolId && request.resource.data.id == uploadId;
       allow update: if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == uploadId;
       allow delete: if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == uploadId;
+    }
+
+    /**
+     * @description Manages user profile data. Users can read and write their own profile information.
+     * @path /users/{userId}
+     * @allow (read, write): if isSignedIn() && request.auth.uid == userId
+     * @principle Enforces user ownership of their own profile data.
+     */
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
     function isSignedIn() {

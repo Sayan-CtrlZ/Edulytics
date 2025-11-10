@@ -40,10 +40,10 @@ export async function uploadFile(prevState: FormState, formData: FormData): Prom
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const results = await new Promise((resolve, reject) => {
+    const results: any = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         { 
-          resource_type: 'raw',
+          resource_type: 'image',
           upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET
         },
         (error, result) => {
@@ -57,16 +57,7 @@ export async function uploadFile(prevState: FormState, formData: FormData): Prom
 
     console.log('Cloudinary upload result:', results);
 
-    // For this demonstration, we will simulate the analysis and return mock statistics.
-    const mockStats = {
-      mean: Math.round(Math.random() * 20 + 75),
-      median: Math.round(Math.random() * 20 + 75),
-      mode: Math.round(Math.random() * 20 + 75),
-      max: 100,
-      min: Math.round(Math.random() * 20 + 40),
-    };
-
-    return { message: `File "${file.name}" uploaded successfully!`, stats: mockStats };
+    return { message: 'File uploaded successfully', fields: { photoURL: results.secure_url } };
   } catch (error) {
     console.error('Error uploading to Cloudinary:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
