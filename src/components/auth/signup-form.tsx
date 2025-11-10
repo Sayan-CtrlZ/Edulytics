@@ -28,7 +28,8 @@ export function SignupForm() {
       await createUserWithEmailAndPassword(auth, email, password);
       router.push("/");
     } catch (err: any) {
-      setError(err.message);
+      setError("An unexpected error occurred during sign up. Please try again.");
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
