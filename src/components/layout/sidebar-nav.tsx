@@ -18,7 +18,6 @@ import {
   LayoutDashboard,
   Upload,
   Settings,
-  LifeBuoy,
   ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,7 +30,6 @@ const menuItems = [
 const secondaryMenuItems = [
     { href: "/account", label: "Account", icon: ShieldCheck },
     { href: "/settings", label: "Settings", icon: Settings },
-    { href: "/support", label: "Support", icon: LifeBuoy },
 ]
 
 export function SidebarNav() {
@@ -78,7 +76,6 @@ export function SidebarNav() {
                     asChild
                     isActive={pathname.startsWith(item.href)}
                     tooltip={item.label}
-                    disabled={item.disabled}
                     className="justify-start"
                     >
                     <Link href={item.href}>

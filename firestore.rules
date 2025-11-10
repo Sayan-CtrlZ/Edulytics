@@ -132,18 +132,6 @@ service cloud.firestore {
       allow delete: if isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * @description Manages support tickets. Allows any authenticated user to create a ticket.
-     * Read, update, and delete should be restricted to admin roles (not implemented in these rules).
-     * @path /support-tickets/{ticketId}
-     * @allow (create): if isSignedIn()
-     * @principle Allows users to submit support requests.
-     */
-    match /support-tickets/{ticketId} {
-        allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId;
-        allow read, update, delete: if false;
-    }
-
     function isSignedIn() {
       return request.auth != null;
     }
