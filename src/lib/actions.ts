@@ -4,6 +4,13 @@
 import { redirect } from "next/navigation";
 import { login as authLogin, logout as authLogout } from "@/lib/auth";
 import type { ZodError } from 'zod';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({ 
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET 
+});
 
 export type FormState = {
   message: string;
@@ -46,21 +53,42 @@ export async function uploadFile(prevState: FormState, formData: FormData): Prom
   if (!file || file.size === 0 || !file.name) {
     return { message: 'Please select a valid file to upload.' };
   }
-  
-  // In a real application, you would parse the file here using a library like 'papaparse' for CSV or 'xlsx' for Excel.
-  // The result would be used to calculate statistics and store data in Firestore.
-  // The file itself would be uploaded to a service like Cloudinary.
-  
-  // For this demonstration, we will simulate the process and return mock statistics.
-  console.log(`Simulating upload and analysis for: ${file.name}`);
-  
-  const mockStats = {
-    mean: Math.round(Math.random() * 20 + 75),
-    median: Math.round(Math.random() * 20 + 75),
-    mode: Math.round(Math.random() * 20 + 75),
-    max: 100,
-    min: Math.round(Math.random() * 20 + 40),
-  };
 
-  return { message: `File "${file.name}" uploaded and analyzed successfully!`, stats: mockStats };
+  if (!process.env.CLOUDINARY_API_SECRET) {
+    return { message: "Cloudinary API secret is not configured. Cannot upload file." };
+  }
+  
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const results = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        { resource_type: 'raw' },
+        (error, result) => {
+          if (error) {
+            return reject(error);
+          }
+          return resolve(result);
+        }
+      ).end(buffer);
+    });
+
+    console.log('Cloudinary upload result:', results);
+
+    // For this demonstration, we will simulate the analysis and return mock statistics.
+    const mockStats = {
+      mean: Math.round(Math.random() * 20 + 75),
+      median: Math.round(Math.random() * 20 + 75),
+      mode: Math.round(Math.random() * 20 + 75),
+      max: 100,
+      min: Math.round(Math.random() * 20 + 40),
+    };
+
+    return { message: `File "${file.name}" uploaded successfully!`, stats: mockStats };
+  } catch (error) {
+    console.error('Error uploading to Cloudinary:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    return { message: `Upload failed: ${errorMessage}` };
+  }
 }
