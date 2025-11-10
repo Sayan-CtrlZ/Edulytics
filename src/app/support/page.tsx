@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Send } from 'lucide-react';
+import { createSupportTicket } from '@/ai/flows/support-ticket';
 
 export default function SupportPage() {
   const { user, isUserLoading } = useUser();
@@ -27,7 +28,7 @@ export default function SupportPage() {
     redirect('/login');
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!subject || !message) {
       toast({
@@ -40,16 +41,33 @@ export default function SupportPage() {
     
     setIsSending(true);
 
-    // Simulate sending a support request
-    setTimeout(() => {
+    try {
+      if (!user.email) {
+        throw new Error("User email is not available.");
+      }
+      await createSupportTicket({
+        subject,
+        message,
+        userEmail: user.email,
+        userId: user.uid,
+      });
+
       toast({
         title: 'Request Sent!',
         description: 'Your support request has been sent. We will get back to you shortly.',
       });
       setSubject('');
       setMessage('');
+    } catch (error) {
+      console.error("Failed to send support ticket:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to Send',
+        description: 'There was a problem sending your support request. Please try again.',
+      });
+    } finally {
       setIsSending(false);
-    }, 1000);
+    }
   };
 
   return (
