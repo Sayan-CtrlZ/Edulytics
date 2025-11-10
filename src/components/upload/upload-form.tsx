@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useFormStatus } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,7 @@ function SubmitButton() {
 
 export function UploadForm() {
   const initialState: FormState = { message: "" };
-  const [state, dispatch] = useFormState(uploadFile, initialState);
+  const [state, dispatch] = useActionState(uploadFile, initialState);
 
   return (
     <div className="space-y-6">
