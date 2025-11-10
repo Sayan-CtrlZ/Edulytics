@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { PlusCircle, Trash2, Upload, FileCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Papa from "papaparse";
+import * as XLSX from 'xlsx';
 import { useFirestore, useUser, FirestorePermissionError, errorEmitter } from "@/firebase";
 import { collection, writeBatch, doc } from "firebase/firestore";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -82,6 +83,40 @@ export function DataInputSheet() {
     setData(currentData => currentData.filter(row => row.id !== id));
   };
 
+  const processParsedData = (parsedData: any[]) => {
+      const formattedData = parsedData
+        .map((row, index) => {
+          const studentName = row.studentName;
+          const marks = row.marks;
+
+          if (studentName && marks) {
+            return {
+              id: `file-${nextId + index}`,
+              studentName: String(studentName),
+              marks: String(marks),
+            };
+          }
+          return null;
+        })
+        .filter((row): row is StudentMark => row !== null && !!row.studentName && !!row.marks);
+
+      if (formattedData.length === 0) {
+          toast({
+              variant: "destructive",
+              title: "Parsing Error",
+              description: "Could not parse valid 'studentName' and 'marks' columns from the file. Please check the file and column headers.",
+          });
+          return;
+      }
+
+      setData(currentData => [...currentData, ...formattedData]);
+      setNextId(prevId => prevId + formattedData.length);
+      toast({
+        title: "Upload Successful",
+        description: `${formattedData.length} rows have been added from the file.`,
+      });
+  }
+
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
@@ -93,50 +128,52 @@ export function DataInputSheet() {
       return;
     }
 
-    Papa.parse<any>(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const parsedData = results.data
-          .map((row, index) => {
-            const studentName = row.studentName;
-            const marks = row.marks;
+    const reader = new FileReader();
 
-            if (studentName && marks) {
-              return {
-                id: `csv-${nextId + index}`,
-                studentName: String(studentName),
-                marks: String(marks),
-              };
-            }
-            return null;
-          })
-          .filter((row): row is StudentMark => row !== null && !!row.studentName && !!row.marks);
-
-        if (parsedData.length === 0) {
-            toast({
+    if (file.name.endsWith('.csv')) {
+      reader.onload = (e) => {
+          const text = e.target?.result;
+          Papa.parse<any>(text as string, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+              processParsedData(results.data);
+            },
+            error: (error) => {
+              toast({
                 variant: "destructive",
-                title: "Parsing Error",
-                description: "Could not parse valid 'studentName' and 'marks' columns from the CSV. Please check the file.",
-            });
-            return;
-        }
-
-        setData(currentData => [...currentData, ...parsedData]);
-        setNextId(prevId => prevId + parsedData.length);
+                title: "CSV Parsing Error",
+                description: error.message,
+              });
+            },
+          });
+      };
+      reader.readAsText(file);
+    } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        reader.onload = (e) => {
+            try {
+                const data = e.target?.result;
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+                processParsedData(json);
+            } catch (error: any) {
+                toast({
+                    variant: "destructive",
+                    title: "Excel Parsing Error",
+                    description: error.message || "Failed to parse the Excel file.",
+                });
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    } else {
         toast({
-          title: "Upload Successful",
-          description: `${parsedData.length} rows have been added from the CSV.`,
+            variant: "destructive",
+            title: "Unsupported File Type",
+            description: "Please upload a .csv or .xlsx file.",
         });
-      },
-      error: (error) => {
-        toast({
-          variant: "destructive",
-          title: "CSV Parsing Error",
-          description: error.message,
-        });
-      },
-    });
+    }
 
     if(fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -172,7 +209,7 @@ export function DataInputSheet() {
             hasValidData = true;
             let markId;
             // If the ID is from an existing document being edited, use it. Otherwise, generate a new one.
-            if (typeof row.id === 'string' && !row.id.startsWith('new-') && !row.id.startsWith('csv-')) {
+            if (typeof row.id === 'string' && !row.id.startsWith('new-') && !row.id.startsWith('csv-') && !row.id.startsWith('file-')) {
               markId = row.id;
             } else {
               markId = doc(marksCollection).id;
@@ -254,7 +291,7 @@ export function DataInputSheet() {
       <CardHeader>
         <CardTitle>Data Entry Sheet</CardTitle>
         <CardDescription>
-          Specify the class, section, and subject, then add student records or upload a CSV with 'studentName' and 'marks' columns.
+          Specify the class, section, and subject, then add student records or upload a CSV/XLSX file with 'studentName' and 'marks' columns.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -306,15 +343,15 @@ export function DataInputSheet() {
                 ref={fileInputRef}
                 className="hidden"
                 onChange={handleFileUpload}
-                accept=".csv"
+                accept=".csv, .xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
             />
             <Button onClick={triggerFileUpload} size="sm" variant="default" className="bg-violet-600 hover:bg-violet-700">
                 <Upload className="mr-2" />
-                Upload CSV
+                Upload File
             </Button>
           </div>
           <Button onClick={downloadTemplate} size="sm" variant="link">
-              Download Template
+              Download CSV Template
           </Button>
         </div>
         <div className="overflow-auto rounded-md border" style={{maxHeight: '40vh'}}>
@@ -363,11 +400,11 @@ export function DataInputSheet() {
         </div>
          {data.length === 0 && (
             <div className="text-center p-8 text-muted-foreground">
-                <p>The table is empty. Click "Add Row" or "Upload CSV" to get started.</p>
+                <p>The table is empty. Click "Add Row" or "Upload File" to get started.</p>
             </div>
         )}
         <div className="mt-8">
-            <h3 className="text-lg font-medium mb-2">CSV Upload Format Example</h3>
+            <h3 className="text-lg font-medium mb-2">File Upload Format Example</h3>
             <div className="border rounded-md p-4 bg-muted/50 w-full max-w-md">
                 <Table>
                     <TableHeader>
