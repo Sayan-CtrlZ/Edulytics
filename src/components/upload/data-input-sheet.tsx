@@ -2,22 +2,20 @@
 'use client';
 
 import { useState, useRef, ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PlusCircle, Trash2, Upload, Save } from "lucide-react";
+import { PlusCircle, Trash2, Upload, Save, FileCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Papa from "papaparse";
 import { useFirestore, useUser } from "@/firebase";
 import { collection, writeBatch, doc } from "firebase/firestore";
-import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 type StudentMark = {
   id: number;
   studentName: string;
-  class: string;
-  section: string;
   subject: string;
   marks: string;
 };
@@ -25,27 +23,35 @@ type StudentMark = {
 export function DataInputSheet() {
   const [data, setData] = useState<StudentMark[]>([]);
   const [nextId, setNextId] = useState(1);
+  const [classValue, setClassValue] = useState("");
+  const [sectionValue, setSectionValue] = useState("");
+  const [isSaved, setIsSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
+  const router = useRouter();
+
 
   const handleInputChange = (id: number, field: keyof StudentMark, value: string) => {
     setData(currentData =>
       currentData.map(row => (row.id === id ? { ...row, [field]: value } : row))
     );
+    setIsSaved(false);
   };
 
   const addRow = () => {
     setData(currentData => [
       ...currentData,
-      { id: nextId, studentName: "", class: "", section: "", subject: "", marks: "" },
+      { id: nextId, studentName: "", subject: "", marks: "" },
     ]);
     setNextId(prevId => prevId + 1);
+    setIsSaved(false);
   };
 
   const removeRow = (id: number) => {
     setData(currentData => currentData.filter(row => row.id !== id));
+    setIsSaved(false);
   };
 
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
@@ -65,19 +71,14 @@ export function DataInputSheet() {
       complete: (results) => {
         const parsedData = results.data
           .map((row, index) => {
-            // Basic validation for common header names
             const studentName = row.studentName || row.StudentName || row.name || row.Name;
-            const studentClass = row.class || row.Class;
-            const section = row.section || row.Section;
             const subject = row.subject || row.Subject;
             const marks = row.marks || row.Marks || row.score || row.Score;
 
-            if (studentName && subject && marks && studentClass && section) {
+            if (studentName && subject && marks) {
               return {
                 id: nextId + index,
                 studentName: String(studentName),
-                class: String(studentClass),
-                section: String(section),
                 subject: String(subject),
                 marks: String(marks),
               };
@@ -97,6 +98,7 @@ export function DataInputSheet() {
 
         setData(currentData => [...currentData, ...parsedData]);
         setNextId(prevId => prevId + parsedData.length);
+        setIsSaved(false);
         toast({
           title: "Upload Successful",
           description: `${parsedData.length} rows have been added from the CSV.`,
@@ -111,7 +113,6 @@ export function DataInputSheet() {
       },
     });
 
-    // Reset file input
     if(fileInputRef.current) {
         fileInputRef.current.value = "";
     }
@@ -123,15 +124,19 @@ export function DataInputSheet() {
 
   const handleSave = async () => {
     if (!firestore || !user) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not connect to the database. Please try again.",
-      });
+      toast({ variant: "destructive", title: "Error", description: "Could not connect to the database." });
+      return;
+    }
+    if (!classValue || !sectionValue) {
+      toast({ variant: "destructive", title: "Validation Error", description: "Please provide a class and section." });
+      return;
+    }
+    if(data.length === 0) {
+      toast({ variant: "destructive", title: "No Data", description: "There is no data to save." });
       return;
     }
 
-    const schoolId = "school-1"; // Hardcoded for now
+    const schoolId = "school-1";
     const marksCollection = collection(firestore, `schools/${schoolId}/marks`);
     const batch = writeBatch(firestore);
 
@@ -143,8 +148,8 @@ export function DataInputSheet() {
                 schoolId: schoolId,
                 studentId: row.studentName.toLowerCase().replace(/\s+/g, '-'), // simple ID generation
                 studentName: row.studentName,
-                class: row.class,
-                section: row.section,
+                class: classValue,
+                section: sectionValue,
                 subject: row.subject,
                 marks: Number(row.marks),
                 dateTaken: new Date().toISOString(),
@@ -159,10 +164,7 @@ export function DataInputSheet() {
             title: "Data Saved",
             description: "The student data has been successfully saved.",
         });
-        // Optionally clear the table after saving
-        setData([]);
-        setNextId(1);
-
+        setIsSaved(true);
     } catch (error: any) {
         console.error("Error saving data:", error);
         toast({
@@ -171,20 +173,58 @@ export function DataInputSheet() {
             description: "Could not save the data. Please try again.",
         });
     }
-};
+  };
+  
+  const handleGenerateReport = () => {
+    if(isSaved) {
+      router.push('/');
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Save Required",
+        description: "Please save your data before generating a report.",
+      });
+    }
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Data Entry Sheet</CardTitle>
         <CardDescription>
-          Manually add student records or upload a CSV with columns: studentName, class, section, subject, marks.
+          Specify the class and section, then add records or upload a CSV with columns: studentName, subject, marks.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <div className="flex gap-2 items-center">
+                <Input
+                    value={classValue}
+                    onChange={e => { setClassValue(e.target.value); setIsSaved(false); }}
+                    placeholder="Class (e.g., 10)"
+                    className="w-32"
+                />
+                <Input
+                    value={sectionValue}
+                    onChange={e => { setSectionValue(e.target.value); setIsSaved(false); }}
+                    placeholder="Section (e.g., A)"
+                    className="w-32"
+                />
+            </div>
+            <div className="flex gap-2">
+                <Button onClick={handleSave} size="sm">
+                    <Save className="mr-2" />
+                    Save Data
+                </Button>
+                <Button onClick={handleGenerateReport} size="sm" variant="default">
+                    <FileCheck className="mr-2" />
+                    View Report
+                </Button>
+          </div>
+        </div>
+        <div className="flex justify-start items-center mb-4">
           <div className="flex gap-2">
-            <Button onClick={addRow} size="sm">
+            <Button onClick={addRow} size="sm" variant="outline">
               <PlusCircle className="mr-2" />
               Add Row
             </Button>
@@ -200,19 +240,13 @@ export function DataInputSheet() {
                 Upload CSV
             </Button>
           </div>
-          <Button onClick={handleSave} size="sm" variant="default">
-            <Save className="mr-2" />
-            Save Data
-          </Button>
         </div>
         <div className="overflow-auto rounded-md border" style={{maxHeight: '60vh'}}>
           <Table>
             <TableHeader className="sticky top-0 bg-muted/50">
               <TableRow>
-                <TableHead className="w-[30%]">Student Name</TableHead>
-                <TableHead className="w-[15%]">Class</TableHead>
-                <TableHead className="w-[15%]">Section</TableHead>
-                <TableHead className="w-[20%]">Subject</TableHead>
+                <TableHead className="w-[50%]">Student Name</TableHead>
+                <TableHead className="w-[30%]">Subject</TableHead>
                 <TableHead className="w-[10%]">Marks</TableHead>
                 <TableHead className="w-[10%] text-right">Actions</TableHead>
               </TableRow>
@@ -225,22 +259,6 @@ export function DataInputSheet() {
                       value={row.studentName}
                       onChange={e => handleInputChange(row.id, "studentName", e.target.value)}
                       placeholder="e.g. John Doe"
-                      className="border-none focus-visible:ring-1"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      value={row.class}
-                      onChange={e => handleInputChange(row.id, "class", e.target.value)}
-                      placeholder="e.g. 10"
-                      className="border-none focus-visible:ring-1"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      value={row.section}
-                      onChange={e => handleInputChange(row.id, "section", e.target.value)}
-                      placeholder="e.g. A"
                       className="border-none focus-visible:ring-1"
                     />
                   </TableCell>
