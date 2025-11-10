@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { redirect } from 'next/navigation';
 import Dashboard from '@/components/dashboard/dashboard';
 import { useMemo, useState } from 'react';
@@ -57,6 +57,14 @@ export default function DashboardPage() {
       setActiveTab(sections[0].id);
     } else if (sections.length === 0) {
       setActiveTab(undefined);
+    } else {
+      // If the active tab is no longer valid, reset it
+      const currentTabExists = sections.some(s => s.id === activeTab);
+      if (!currentTabExists && sections.length > 0) {
+        setActiveTab(sections[0].id);
+      } else if (sections.length === 0) {
+        setActiveTab(undefined);
+      }
     }
     return sections;
   }, [allMarks, activeTab]);
@@ -80,31 +88,49 @@ export default function DashboardPage() {
     
     try {
       const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        toast({ title: 'Info', description: 'No documents found to delete.' });
+        return;
+      }
       const batch = writeBatch(firestore);
       querySnapshot.forEach((doc) => {
         batch.delete(doc.ref);
       });
+      
+      // The batch itself doesn't have a specific error handler we can use for permission errors in the same way.
+      // We will commit and catch. A failure here is likely a permission issue on one of the documents.
       await batch.commit();
+
       toast({ title: 'Success', description: `Report for Class ${classToDelete}-${sectionToDelete} has been deleted.` });
     } catch (error) {
-      console.error("Error deleting class report:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not delete the class report.' });
+       // Since batch delete involves multiple docs, we can't pinpoint one.
+       // We emit a generic but structured error for the collection.
+       const permissionError = new FirestorePermissionError({
+        path: `schools/${schoolId}/marks`,
+        operation: 'delete', // Batch delete is a series of deletes
+      });
+      errorEmitter.emit('permission-error', permissionError);
     }
   };
 
   const handleDeleteStudentMark = async (markId: string) => {
     if (!firestore) return;
-    try {
-      await deleteDoc(doc(firestore, `schools/${schoolId}/marks`, markId));
-      toast({ title: 'Success', description: 'Student mark deleted.' });
-    } catch (error) {
-      console.error("Error deleting student mark:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not delete the student mark.' });
-    }
+    const docRef = doc(firestore, `schools/${schoolId}/marks`, markId);
+    deleteDoc(docRef)
+      .then(() => {
+        toast({ title: 'Success', description: 'Student mark deleted.' });
+      })
+      .catch((error) => {
+        const permissionError = new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   if (isUserLoading || isMarksLoading) {
-    return <div>Loading...</div>; // Or a spinner
+    return <div>Loading...</div>;
   }
 
   if (!user) {
@@ -112,12 +138,13 @@ export default function DashboardPage() {
   }
 
   if (error) {
-    return <div>Error loading data. Please check console.</div>
+    // The useCollection hook will now throw a contextual error which is caught by the error boundary
+    return null;
   }
 
   if (!allMarks || allMarks.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+      <div className="flex flex-col items-center justify-center h-full">
           <Card className="w-full max-w-md">
               <CardHeader>
                   <CardTitle>No Reports Found</CardTitle>
@@ -143,7 +170,7 @@ export default function DashboardPage() {
       
       {classSections.length > 0 && (
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="relative">
+          <TabsList className="relative flex flex-wrap h-auto justify-start">
             {classSections.map(cs => (
               <div key={cs.id} className="relative group pr-8">
                 <TabsTrigger value={cs.id}>{cs.name}</TabsTrigger>
