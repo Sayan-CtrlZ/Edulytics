@@ -37,13 +37,13 @@ export default function LoginPage() {
             className="object-cover dark:brightness-[0.2] dark:grayscale"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-primary/50 to-transparent" />
-        <div className="absolute bottom-0 left-0 p-8 text-primary-foreground">
+        <div className="absolute inset-0 bg-gradient-to-t from-primary/70 via-primary/20 to-transparent" />
+        <div className="absolute bottom-0 left-0 p-8 text-white">
           <div className="flex items-center gap-2 mb-2">
             <GraduationCap className="h-8 w-8" />
             <h2 className="text-2xl font-bold">Edulytics</h2>
           </div>
-          <p className="max-w-prose">
+          <p className="max-w-prose text-white/90">
             Unlock powerful analytics to drive student success. Our platform provides intuitive tools for educators to understand performance trends and make data-driven decisions.
           </p>
         </div>
