@@ -222,7 +222,20 @@ export function DataInputSheet() {
   };
 
   const downloadTemplate = () => {
-    const csvContent = "studentName,marks\nJohn Doe,95\nJane Smith,88\n";
+    const csvHeader = "studentName,marks\n";
+    const csvRows = [
+      "Amelia Johnson,88",
+      "Benjamin Carter,92",
+      "Chloe Davis,78",
+      "Daniel Evans,85",
+      "Evelyn Foster,95",
+      "Finn Garcia,81",
+      "Grace Hall,89",
+      "Henry Irving,76",
+      "Isabella Jackson,99",
+      "Jack King,83",
+    ];
+    const csvContent = csvHeader + csvRows.join("\n") + "\n";
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     if (link.download !== undefined) {
