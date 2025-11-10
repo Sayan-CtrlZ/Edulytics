@@ -33,7 +33,6 @@ export function LoginForm() {
       } else {
         setError("An unexpected error occurred. Please try again.");
       }
-      console.error(err);
     } finally {
       setIsLoading(false);
     }
