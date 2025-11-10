@@ -12,8 +12,8 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/firebase";
 
 export function LoginForm() {
-  const [email, setEmail] = useState("teacher@school.edu");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

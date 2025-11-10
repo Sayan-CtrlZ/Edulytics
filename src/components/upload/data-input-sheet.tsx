@@ -23,10 +23,8 @@ type StudentMark = {
 };
 
 export function DataInputSheet() {
-  const [data, setData] = useState<StudentMark[]>([
-    { id: 1, studentName: "Alice Johnson", class: "10", section: "A", subject: "Mathematics", marks: "88" },
-  ]);
-  const [nextId, setNextId] = useState(2);
+  const [data, setData] = useState<StudentMark[]>([]);
+  const [nextId, setNextId] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
