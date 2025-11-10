@@ -64,7 +64,10 @@ export async function uploadFile(prevState: FormState, formData: FormData): Prom
 
     const results = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
-        { resource_type: 'raw' },
+        { 
+          resource_type: 'raw',
+          upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET
+        },
         (error, result) => {
           if (error) {
             return reject(error);
