@@ -2,14 +2,14 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { loginWithCredentials, signupWithCredentials, signOut } from "@/lib/auth";
 import type { ZodError } from 'zod';
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({ 
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
   api_key: process.env.CLOUDINARY_API_KEY, 
-  api_secret: process.env.CLOUDINARY_API_SECRET 
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET
 });
 
 export type FormState = {
@@ -23,45 +23,6 @@ export type FormState = {
     max: number;
     min: number;
   } | null;
-}
-
-export async function login(prevState: FormState, formData: FormData): Promise<FormState> {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  if (!email || !password) {
-    return { message: "Email and password are required." };
-  }
-
-  const result = await loginWithCredentials(email, password);
-
-  if (!result.success) {
-    return { message: result.error ?? "An unknown error occurred." };
-  }
-
-  redirect("/");
-}
-
-export async function signup(prevState: FormState, formData: FormData): Promise<FormState> {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  if (!email || !password) {
-    return { message: "Email and password are required." };
-  }
-
-  const result = await signupWithCredentials(email, password);
-
-  if (!result.success) {
-    return { message: result.error ?? "An unknown error occurred." };
-  }
-
-  redirect("/");
-}
-
-export async function logout() {
-  await signOut();
-  redirect("/login");
 }
 
 export async function uploadFile(prevState: FormState, formData: FormData): Promise<FormState> {
