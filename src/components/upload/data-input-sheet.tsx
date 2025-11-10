@@ -13,13 +13,15 @@ import Papa from "papaparse";
 type StudentMark = {
   id: number;
   studentName: string;
+  class: string;
+  section: string;
   subject: string;
   marks: string;
 };
 
 export function DataInputSheet() {
   const [data, setData] = useState<StudentMark[]>([
-    { id: 1, studentName: "Alice Johnson", subject: "Mathematics", marks: "88" },
+    { id: 1, studentName: "Alice Johnson", class: "10", section: "A", subject: "Mathematics", marks: "88" },
   ]);
   const [nextId, setNextId] = useState(2);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -34,7 +36,7 @@ export function DataInputSheet() {
   const addRow = () => {
     setData(currentData => [
       ...currentData,
-      { id: nextId, studentName: "", subject: "", marks: "" },
+      { id: nextId, studentName: "", class: "", section: "", subject: "", marks: "" },
     ]);
     setNextId(prevId => prevId + 1);
   };
@@ -62,13 +64,17 @@ export function DataInputSheet() {
           .map((row, index) => {
             // Basic validation for common header names
             const studentName = row.studentName || row.StudentName || row.name || row.Name;
+            const studentClass = row.class || row.Class;
+            const section = row.section || row.Section;
             const subject = row.subject || row.Subject;
             const marks = row.marks || row.Marks || row.score || row.Score;
 
-            if (studentName && subject && marks) {
+            if (studentName && subject && marks && studentClass && section) {
               return {
                 id: nextId + index,
                 studentName: String(studentName),
+                class: String(studentClass),
+                section: String(section),
                 subject: String(subject),
                 marks: String(marks),
               };
@@ -126,7 +132,7 @@ export function DataInputSheet() {
       <CardHeader>
         <CardTitle>Data Entry Sheet</CardTitle>
         <CardDescription>
-          Manually add student records or upload a CSV with columns: studentName, subject, marks.
+          Manually add student records or upload a CSV with columns: studentName, class, section, subject, marks.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -157,9 +163,11 @@ export function DataInputSheet() {
           <Table>
             <TableHeader className="sticky top-0 bg-muted/50">
               <TableRow>
-                <TableHead className="w-[40%]">Student Name</TableHead>
-                <TableHead className="w-[30%]">Subject</TableHead>
-                <TableHead className="w-[20%]">Marks</TableHead>
+                <TableHead className="w-[30%]">Student Name</TableHead>
+                <TableHead className="w-[15%]">Class</TableHead>
+                <TableHead className="w-[15%]">Section</TableHead>
+                <TableHead className="w-[20%]">Subject</TableHead>
+                <TableHead className="w-[10%]">Marks</TableHead>
                 <TableHead className="w-[10%] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -171,6 +179,22 @@ export function DataInputSheet() {
                       value={row.studentName}
                       onChange={e => handleInputChange(row.id, "studentName", e.target.value)}
                       placeholder="e.g. John Doe"
+                      className="border-none focus-visible:ring-1"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      value={row.class}
+                      onChange={e => handleInputChange(row.id, "class", e.target.value)}
+                      placeholder="e.g. 10"
+                      className="border-none focus-visible:ring-1"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      value={row.section}
+                      onChange={e => handleInputChange(row.id, "section", e.target.value)}
+                      placeholder="e.g. A"
                       className="border-none focus-visible:ring-1"
                     />
                   </TableCell>
