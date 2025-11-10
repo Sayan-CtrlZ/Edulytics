@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -39,7 +40,7 @@ export function SidebarNav() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <div className="flex-1">
+        <div className="flex-1 mt-8">
           <SidebarMenu>
             {menuItems.map((item) => (
               <SidebarMenuItem key={item.href}>
