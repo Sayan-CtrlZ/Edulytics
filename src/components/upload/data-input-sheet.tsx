@@ -230,7 +230,7 @@ export function DataInputSheet() {
         </div>
         <div className="flex justify-start items-center mb-4">
           <div className="flex gap-2">
-            <Button onClick={addRow} size="sm" variant="outline">
+            <Button onClick={addRow} size="sm" variant="default">
               <PlusCircle className="mr-2" />
               Add Row
             </Button>
@@ -241,7 +241,7 @@ export function DataInputSheet() {
                 onChange={handleFileUpload}
                 accept=".csv"
             />
-            <Button onClick={triggerFileUpload} size="sm" variant="outline">
+            <Button onClick={triggerFileUpload} size="sm" variant="default">
                 <Upload className="mr-2" />
                 Upload CSV
             </Button>

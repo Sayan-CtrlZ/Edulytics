@@ -16,12 +16,16 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Mark } from "@/lib/data";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface StudentsTableProps {
   data: Mark[];
+  onDelete: (markId: string) => void;
 }
 
-export default function StudentsTable({ data }: StudentsTableProps) {
+export default function StudentsTable({ data, onDelete }: StudentsTableProps) {
   return (
     <Card>
       <CardHeader>
@@ -34,7 +38,8 @@ export default function StudentsTable({ data }: StudentsTableProps) {
             <TableHeader>
               <TableRow>
                 <TableHead>Student</TableHead>
-                <TableHead className="text-right">Marks</TableHead>
+                <TableHead>Marks</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -46,7 +51,28 @@ export default function StudentsTable({ data }: StudentsTableProps) {
                       {student.subject}
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">{student.marks}</TableCell>
+                  <TableCell>{student.marks}</TableCell>
+                  <TableCell className="text-right">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete the mark for {student.studentName}.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDelete(student.id)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -19,9 +19,10 @@ type Stats = {
 
 interface DashboardProps {
   studentData: Mark[];
+  onDeleteStudent: (markId: string) => void;
 }
 
-export default function Dashboard({ studentData }: DashboardProps) {
+export default function Dashboard({ studentData, onDeleteStudent }: DashboardProps) {
   const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export default function Dashboard({ studentData }: DashboardProps) {
           <StudentsChart data={studentData} />
         </div>
         <div>
-          <StudentsTable data={studentData} />
+          <StudentsTable data={studentData} onDelete={onDeleteStudent} />
         </div>
       </div>
     </div>
