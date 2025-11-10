@@ -34,7 +34,7 @@ export async function uploadFile(prevState: FormState, formData: FormData): Prom
     return { message: 'Please select a valid file to upload.' };
   }
 
-  if (!process.env.CLOUDINARY_API_SECRET || !process.env.CLOUDINARY_UPLOAD_PRESET) {
+  if (!process.env.CLOUDINARY_API_SECRET) {
     return { message: "Cloudinary is not configured correctly. Cannot upload file." };
   }
   
@@ -45,7 +45,7 @@ export async function uploadFile(prevState: FormState, formData: FormData): Prom
     const results: any = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         { 
-          upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET
+            // The preset is not needed for backend uploads with api_secret
         },
         (error, result) => {
           if (error) {
