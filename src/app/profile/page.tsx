@@ -80,6 +80,10 @@ export default function ProfilePage() {
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" defaultValue={user.email ?? ''} readOnly disabled />
             </div>
+            <div className="grid gap-2">
+                <Label htmlFor="instituteName">Institute Name</Label>
+                <Input id="instituteName" defaultValue="Edulytics University" readOnly disabled />
+            </div>
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={handleReset} disabled={isSaving}>Reset</Button>
