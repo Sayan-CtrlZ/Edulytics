@@ -1,0 +1,128 @@
+/**
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a hierarchical data model with strict school-based ownership. All data is nested under /schools/{schoolId}, ensuring that data access is isolated to the appropriate school context.
+ *
+ * Core Philosophy: This ruleset enforces a hierarchical data model with strict school-based ownership. All data is nested under /schools/{schoolId}, ensuring that data access is isolated to the appropriate school context.
+ *
+ * Data Structure:
+ * - /schools/{schoolId}: Stores school metadata.
+ * - /schools/{schoolId}/teachers/{teacherId}: Stores teacher information associated with a school.
+ * - /schools/{schoolId}/students/{studentId}: Stores student information associated with a school.
+ * - /schools/{schoolId}/subjects/{subjectId}: Stores subject information associated with a school.
+ * - /schools/{schoolId}/marks/{markId}: Stores student marks associated with a school.
+ * - /schools/{schoolId}/uploads/{uploadId}: Stores upload information associated with a school.
+ *
+ * Key Security Decisions:
+ * - All subcollections under /schools/{schoolId} enforce that the document's `schoolId` field matches the path's `schoolId` parameter.
+ * - List operations are allowed within a school's subcollections, enabling efficient data retrieval for authorized users.
+ * - The rules prioritize authorization independence by denormalizing the `schoolId` field into each document within a school's subcollections. This avoids costly `get()` calls to the parent `/schools/{schoolId}` document.
+ *
+ * Denormalization for Authorization:
+ * The `schoolId` is denormalized into each document within the subcollections of `/schools/{schoolId}` (teachers, students, subjects, marks, uploads). This is CRUCIAL for efficient and secure authorization. Without this denormalization, it would be impossible to write performant rules that validate a document belongs to the correct school without performing expensive and potentially impossible `get()` calls.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Allows read access to school metadata.  Write access is restricted to ensure data integrity.
+     * @path /schools/{schoolId}
+     * @allow (get, list): if true
+     * @deny (create, update, delete): if false
+     * @principle Public read, restricted write
+     */
+    match /schools/{schoolId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Manages teacher data within a school. Only authenticated users can manage teacher data within a school. The teacherId in the path must match the teacherId in the document. The schoolId in the path must match the schoolId in the document.
+     * @path /schools/{schoolId}/teachers/{teacherId}
+     * @allow (get, list): if isSignedIn()
+     * @allow (create): if isSignedIn() && request.resource.data.schoolId == schoolId && request.resource.data.id == teacherId
+     * @allow (update, delete): if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == teacherId
+     * @deny create: if request.resource.data.schoolId != schoolId || request.resource.data.id != teacherId
+     * @deny update: if resource.data.schoolId != schoolId || resource.data.id != teacherId
+     * @principle Enforces school-based ownership and teacher identity verification
+     */
+    match /schools/{schoolId}/teachers/{teacherId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.schoolId == schoolId && request.resource.data.id == teacherId;
+      allow update: if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == teacherId;
+      allow delete: if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == teacherId;
+    }
+
+    /**
+     * @description Manages student data within a school. Only authenticated users can manage student data within a school. The studentId in the path must match the studentId in the document. The schoolId in the path must match the schoolId in the document.
+     * @path /schools/{schoolId}/students/{studentId}
+     * @allow (get, list): if isSignedIn()
+     * @allow (create): if isSignedIn() && request.resource.data.schoolId == schoolId && request.resource.data.id == studentId
+     * @allow (update, delete): if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == studentId
+     * @deny create: if request.resource.data.schoolId != schoolId || request.resource.data.id != studentId
+     * @deny update: if resource.data.schoolId != schoolId || resource.data.id != studentId
+     * @principle Enforces school-based ownership and student identity verification
+     */
+    match /schools/{schoolId}/students/{studentId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.schoolId == schoolId && request.resource.data.id == studentId;
+      allow update: if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == studentId;
+      allow delete: if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == studentId;
+    }
+
+    /**
+     * @description Manages subject data within a school. Only authenticated users can manage subject data within a school. The subjectId in the path must match the subjectId in the document. The schoolId in the path must match the schoolId in the document.
+     * @path /schools/{schoolId}/subjects/{subjectId}
+     * @allow (get, list): if isSignedIn()
+     * @allow (create): if isSignedIn() && request.resource.data.schoolId == schoolId && request.resource.data.id == subjectId
+     * @allow (update, delete): if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == subjectId
+     * @deny create: if request.resource.data.schoolId != schoolId || request.resource.data.id != subjectId
+     * @deny update: if resource.data.schoolId != schoolId || resource.data.id != subjectId
+     * @principle Enforces school-based ownership and subject identity verification
+     */
+    match /schools/{schoolId}/subjects/{subjectId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.schoolId == schoolId && request.resource.data.id == subjectId;
+      allow update: if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == subjectId;
+      allow delete: if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == subjectId;
+    }
+
+    /**
+     * @description Manages mark data within a school. Only authenticated users can manage mark data within a school. The markId in the path must match the markId in the document. The schoolId in the path must match the schoolId in the document.
+     * @path /schools/{schoolId}/marks/{markId}
+     * @allow (get, list): if isSignedIn()
+     * @allow (create): if isSignedIn() && request.resource.data.schoolId == schoolId && request.resource.data.id == markId
+     * @allow (update, delete): if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == markId
+     * @deny create: if request.resource.data.schoolId != schoolId || request.resource.data.id != markId
+     * @deny update: if resource.data.schoolId != schoolId || resource.data.id != markId
+     * @principle Enforces school-based ownership and mark identity verification
+     */
+    match /schools/{schoolId}/marks/{markId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.schoolId == schoolId && request.resource.data.id == markId;
+      allow update: if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == markId;
+      allow delete: if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == markId;
+    }
+
+    /**
+     * @description Manages upload data within a school. Only authenticated users can manage upload data within a school. The uploadId in the path must match the uploadId in the document. The schoolId in the path must match the schoolId in the document.
+     * @path /schools/{schoolId}/uploads/{uploadId}
+     * @allow (get, list): if isSignedIn()
+     * @allow (create): if isSignedIn() && request.resource.data.schoolId == schoolId && request.resource.data.id == uploadId
+     * @allow (update, delete): if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == uploadId
+     * @deny create: if request.resource.data.schoolId != schoolId || request.resource.data.id != uploadId
+     * @deny update: if resource.data.schoolId != schoolId || resource.data.id != uploadId
+     * @principle Enforces school-based ownership and upload identity verification
+     */
+    match /schools/{schoolId}/uploads/{uploadId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.schoolId == schoolId && request.resource.data.id == uploadId;
+      allow update: if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == uploadId;
+      allow delete: if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == uploadId;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+  }
+}

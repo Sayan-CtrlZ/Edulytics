@@ -1,0 +1,321 @@
+{
+  "entities": {
+    "School": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "School",
+      "type": "object",
+      "description": "Represents a school entity within the Student Analytics Portal.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the School entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the school."
+        },
+        "location": {
+          "type": "string",
+          "description": "Location of the school."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "Teacher": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Teacher",
+      "type": "object",
+      "description": "Represents a teacher associated with a school.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Teacher entity."
+        },
+        "schoolId": {
+          "type": "string",
+          "description": "Reference to School. (Relationship: School 1:N Teacher)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the teacher."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the teacher.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "schoolId",
+        "name",
+        "email"
+      ]
+    },
+    "Student": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Student",
+      "type": "object",
+      "description": "Represents a student enrolled in a school.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Student entity."
+        },
+        "schoolId": {
+          "type": "string",
+          "description": "Reference to School. (Relationship: School 1:N Student)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the student."
+        },
+        "dateOfBirth": {
+          "type": "string",
+          "description": "Date of birth of the student.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "schoolId",
+        "name"
+      ]
+    },
+    "Subject": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Subject",
+      "type": "object",
+      "description": "Represents a subject taught in the school.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Subject entity."
+        },
+        "schoolId": {
+          "type": "string",
+          "description": "Reference to School. (Relationship: School 1:N Subject)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the subject."
+        },
+        "teacherId": {
+          "type": "string",
+          "description": "Reference to Teacher. (Relationship: Teacher 1:N Subject)"
+        }
+      },
+      "required": [
+        "id",
+        "schoolId",
+        "name"
+      ]
+    },
+    "Mark": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Mark",
+      "type": "object",
+      "description": "Represents a mark obtained by a student in a subject.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Mark entity."
+        },
+        "studentId": {
+          "type": "string",
+          "description": "Reference to Student. (Relationship: Student 1:N Mark)"
+        },
+        "subjectId": {
+          "type": "string",
+          "description": "Reference to Subject. (Relationship: Subject 1:N Mark)"
+        },
+        "marks": {
+          "type": "number",
+          "description": "Marks obtained by the student in the subject."
+        },
+        "dateTaken": {
+          "type": "string",
+          "description": "Date when the marks were recorded.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "studentId",
+        "subjectId",
+        "marks"
+      ]
+    },
+    "Upload": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Upload",
+      "type": "object",
+      "description": "Represents a file upload and its associated metadata.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Upload entity."
+        },
+        "schoolId": {
+          "type": "string",
+          "description": "Reference to School. (Relationship: School 1:N Upload)"
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "URL of the uploaded file in Cloudinary.",
+          "format": "uri"
+        },
+        "uploadedBy": {
+          "type": "string",
+          "description": "Email of the teacher who uploaded the file."
+        },
+        "uploadDate": {
+          "type": "string",
+          "description": "Date and time of the upload.",
+          "format": "date-time"
+        },
+        "stats": {
+          "type": "string",
+          "description": "Analytics stats of the upload"
+        }
+      },
+      "required": [
+        "id",
+        "schoolId",
+        "fileUrl",
+        "uploadedBy",
+        "uploadDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/schools/{schoolId}",
+        "definition": {
+          "entityName": "School",
+          "schema": {
+            "$ref": "#/backend/entities/School"
+          },
+          "description": "Stores school metadata.",
+          "params": [
+            {
+              "name": "schoolId",
+              "description": "The unique identifier for the school."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/teachers/{teacherId}",
+        "definition": {
+          "entityName": "Teacher",
+          "schema": {
+            "$ref": "#/backend/entities/Teacher"
+          },
+          "description": "Stores teacher information. Includes denormalized 'schoolId' for authorization independence.",
+          "params": [
+            {
+              "name": "schoolId",
+              "description": "The unique identifier for the school."
+            },
+            {
+              "name": "teacherId",
+              "description": "The unique identifier for the teacher."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/students/{studentId}",
+        "definition": {
+          "entityName": "Student",
+          "schema": {
+            "$ref": "#/backend/entities/Student"
+          },
+          "description": "Stores student information. Includes denormalized 'schoolId' for authorization independence.",
+          "params": [
+            {
+              "name": "schoolId",
+              "description": "The unique identifier for the school."
+            },
+            {
+              "name": "studentId",
+              "description": "The unique identifier for the student."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/subjects/{subjectId}",
+        "definition": {
+          "entityName": "Subject",
+          "schema": {
+            "$ref": "#/backend/entities/Subject"
+          },
+          "description": "Stores subject information. Includes denormalized 'schoolId' for authorization independence.",
+          "params": [
+            {
+              "name": "schoolId",
+              "description": "The unique identifier for the school."
+            },
+            {
+              "name": "subjectId",
+              "description": "The unique identifier for the subject."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/marks/{markId}",
+        "definition": {
+          "entityName": "Mark",
+          "schema": {
+            "$ref": "#/backend/entities/Mark"
+          },
+          "description": "Stores student marks. Includes denormalized 'schoolId' for authorization independence.",
+          "params": [
+            {
+              "name": "schoolId",
+              "description": "The unique identifier for the school."
+            },
+            {
+              "name": "markId",
+              "description": "The unique identifier for the mark."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/uploads/{uploadId}",
+        "definition": {
+          "entityName": "Upload",
+          "schema": {
+            "$ref": "#/backend/entities/Upload"
+          },
+          "description": "Stores upload information. Includes denormalized 'schoolId' for authorization independence.",
+          "params": [
+            {
+              "name": "schoolId",
+              "description": "The unique identifier for the school."
+            },
+            {
+              "name": "uploadId",
+              "description": "The unique identifier for the upload."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to optimize for authorization independence, scalability, and ease of debugging, adhering to the principles of DBAC (Database-Based Access Control) and QAPs (Rules are not Filters). The structure leverages path-based ownership and denormalization of authorization data to avoid complex `get()` calls in security rules.  Each school will have its own set of Teachers, Students, Subjects, Marks and Uploads. All child entities will reside as subcollections of the school, allowing for easy management and querying of school-specific data. The `schools` collection will only store the school's metadata.\n\nAuthorization Independence (CRITICAL): For each entity that depends on school authorization (Teachers, Students, Subjects, Marks, and Uploads), `schoolId` is included in each document. This denormalization allows us to secure subcollections based on the `schoolId` in the document without needing to perform `get()` requests to the parent `school` document.\n\nQAPs (Rules are not Filters): Because each collection is scoped to a school, list operations can be performed securely, filtering only data associated with the school.\n\nConsistent Authorization Modeling:\n\n*   Path-Based Ownership: The collections for Teachers, Students, Subjects, Marks, and Uploads are subcollections under the `schools/{schoolId}` document. Security rules can leverage `request.auth.uid` and the denormalized `schoolId` to enforce that only authorized teachers/users can create, read, update, or delete documents within a school's data.\n*   Global Roles (DBAC):  While not explicitly defined in the entities, a global roles collection (e.g., `/roles_admin/{uid}`) can be used to assign admin privileges. The security rules would check for the existence of a document in this collection to grant admin access. The provided entities do not provide Global Roles, only school-based access.  Global roles can be added as a separate collection like `/roles_admin/{uid}`."
+  }
+}
