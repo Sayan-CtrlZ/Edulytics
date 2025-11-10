@@ -1,8 +1,10 @@
+
 export const firebaseConfig = {
-  "projectId": "studio-3709875456-bc484",
-  "appId": "1:595429589669:web:4b8f67ae455547a620c34c",
-  "apiKey": "AIzaSyBs595SkqpzWNdKG_obec1kjFxYgqQ6QwE",
-  "authDomain": "studio-3709875456-bc484.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "595429589669"
+  apiKey: "AIzaSyD-31WH8h9tnaQY_Qp8QYfhgoPXxhXlGnU",
+  authDomain: "edulytics-b0bdb.firebaseapp.com",
+  projectId: "edulytics-b0bdb",
+  storageBucket: "edulytics-b0bdb.firebasestorage.app",
+  messagingSenderId: "692410770624",
+  appId: "1:692410770624:web:79b0e2785c0d69559bb925",
+  measurementId: "G-XS3VGMKB3D"
 };
