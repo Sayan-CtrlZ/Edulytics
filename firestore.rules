@@ -88,13 +88,15 @@ service cloud.firestore {
     }
 
     /**
-     * @description Manages mark data within a school. Only authenticated users can manage mark data within a school. The schoolId in the path must match the schoolId in the document.
+     * @description Manages mark data within a school.
      * @path /schools/{schoolId}/marks/{markId}
-     * @allow (get, list, create, update, delete): if isSignedIn() && request.resource.data.schoolId == schoolId
+     * @allow (read): if isSignedIn() - Allows any authenticated user to read marks.
+     * @allow (write): if isSignedIn() && request.resource.data.schoolId == schoolId - Ensures data integrity on write.
      * @principle Enforces school-based ownership and data integrity.
      */
     match /schools/{schoolId}/marks/{markId} {
-      allow read, write: if isSignedIn() && request.resource.data.schoolId == schoolId;
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.resource.data.schoolId == schoolId;
     }
 
     /**
