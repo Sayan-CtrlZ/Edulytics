@@ -39,7 +39,7 @@ export function SidebarNav() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <div>
+        <div className="flex-1">
           <SidebarMenu>
             {menuItems.map((item) => (
               <SidebarMenuItem key={item.href}>
