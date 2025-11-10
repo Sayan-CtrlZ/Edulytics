@@ -7,13 +7,24 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PlusCircle, Trash2, Upload, FileCheck } from "lucide-react";
+import { PlusCircle, Trash2, Upload, FileCheck, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Papa from "papaparse";
 import * as XLSX from 'xlsx';
 import { useFirestore, useUser, FirestorePermissionError, errorEmitter } from "@/firebase";
 import { collection, writeBatch, doc } from "firebase/firestore";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type StudentMark = {
   id: string; // Use string for IDs coming from edit mode
@@ -81,6 +92,15 @@ export function DataInputSheet() {
 
   const removeRow = (id: string | number) => {
     setData(currentData => currentData.filter(row => row.id !== id));
+  };
+  
+  const clearAllRows = () => {
+    setData([]);
+    setNextId(1);
+    toast({
+        title: "Sheet Cleared",
+        description: "All rows have been removed.",
+    });
   };
 
   const processParsedData = (parsedData: any[]) => {
@@ -349,6 +369,28 @@ export function DataInputSheet() {
                 <Upload className="mr-2" />
                 Upload File
             </Button>
+            {data.length > 0 && (
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="destructive">
+                            <XCircle className="mr-2" />
+                            Clear All
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This action will permanently remove all rows from the sheet. This cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={clearAllRows}>Clear</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
           </div>
           <Button onClick={downloadTemplate} size="sm" variant="link">
               Download CSV Template
@@ -430,3 +472,5 @@ export function DataInputSheet() {
     </Card>
   );
 }
+
+    
