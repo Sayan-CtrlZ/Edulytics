@@ -9,7 +9,6 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
   api_key: process.env.CLOUDINARY_API_KEY, 
   api_secret: process.env.CLOUDINARY_API_SECRET,
-  upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET
 });
 
 export type FormState = {
@@ -32,8 +31,8 @@ export async function uploadFile(prevState: FormState, formData: FormData): Prom
     return { message: 'Please select a valid file to upload.' };
   }
 
-  if (!process.env.CLOUDINARY_API_SECRET) {
-    return { message: "Cloudinary API secret is not configured. Cannot upload file." };
+  if (!process.env.CLOUDINARY_API_SECRET || !process.env.CLOUDINARY_UPLOAD_PRESET) {
+    return { message: "Cloudinary is not configured correctly. Cannot upload file." };
   }
   
   try {
@@ -43,7 +42,6 @@ export async function uploadFile(prevState: FormState, formData: FormData): Prom
     const results: any = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         { 
-          resource_type: 'image',
           upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET
         },
         (error, result) => {
@@ -55,7 +53,9 @@ export async function uploadFile(prevState: FormState, formData: FormData): Prom
       ).end(buffer);
     });
 
-    console.log('Cloudinary upload result:', results);
+    if (!results || !results.secure_url) {
+      throw new Error('Cloudinary did not return a secure URL.');
+    }
 
     return { message: 'File uploaded successfully', fields: { photoURL: results.secure_url } };
   } catch (error) {
