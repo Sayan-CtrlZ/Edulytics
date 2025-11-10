@@ -68,14 +68,11 @@ export default function DashboardPage() {
     return { reportData: data, classes: classNames };
   }, [allMarks, activeClassTab]);
 
-  const handleDeleteClassReport = async (classToDelete: string) => {
+  const deleteMarksByQuery = async (q: any, entityType: string, entityName: string) => {
     if (!firestore) {
       toast({ variant: 'destructive', title: 'Error', description: 'Cannot connect to database.' });
       return;
     }
-    const marksCollectionRef = collection(firestore, `schools/${schoolId}/marks`);
-    const q = query(marksCollectionRef, where("class", "==", classToDelete));
-    
     try {
       const querySnapshot = await getDocs(q);
       if (querySnapshot.empty) {
@@ -89,27 +86,50 @@ export default function DashboardPage() {
       
       await batch.commit();
 
-      toast({ title: 'Success', description: `All reports for Class ${classToDelete} have been deleted.` });
+      toast({ title: 'Success', description: `All reports for ${entityType} ${entityName} have been deleted.` });
     } catch (error) {
        const permissionError = new FirestorePermissionError({
-        path: `schools/${schoolId}/marks`,
+        path: `schools/${schoolId}/marks`, // This path is representative for the batch
         operation: 'delete',
       });
       errorEmitter.emit('permission-error', permissionError);
     }
   };
 
+  const handleDeleteClassReport = async (classToDelete: string) => {
+    if (!firestore) return;
+    const marksCollectionRef = collection(firestore, `schools/${schoolId}/marks`);
+    const q = query(marksCollectionRef, where("class", "==", classToDelete));
+    await deleteMarksByQuery(q, "Class", classToDelete);
+  };
+  
+  const handleDeleteSectionReport = async (classToDelete: string, sectionToDelete: string) => {
+    if (!firestore) return;
+    const marksCollectionRef = collection(firestore, `schools/${schoolId}/marks`);
+    const q = query(marksCollectionRef, where("class", "==", classToDelete), where("section", "==", sectionToDelete));
+    await deleteMarksByQuery(q, "Section", `${classToDelete}-${sectionToDelete}`);
+  };
+
+  const handleDeleteSubjectReport = async (classToDelete: string, sectionToDelete: string, subjectToDelete: string) => {
+    if (!firestore) return;
+    const marksCollectionRef = collection(firestore, `schools/${schoolId}/marks`);
+    const q = query(marksCollectionRef, where("class", "==", classToDelete), where("section", "==", sectionToDelete), where("subject", "==", subjectToDelete));
+    await deleteMarksByQuery(q, "Subject", subjectToDelete);
+  };
+
   const handleDeleteStudentMark = async (markId: string) => {
     if (!firestore) return;
     const docRef = doc(firestore, `schools/${schoolId}/marks`, markId);
-    deleteDoc(docRef)
-      .catch((error) => {
-        const permissionError = new FirestorePermissionError({
-          path: docRef.path,
-          operation: 'delete',
-        });
-        errorEmitter.emit('permission-error', permissionError);
+    try {
+      await deleteDoc(docRef);
+      toast({ title: "Success", description: "Mark deleted successfully." });
+    } catch (error) {
+      const permissionError = new FirestorePermissionError({
+        path: docRef.path,
+        operation: 'delete',
       });
+      errorEmitter.emit('permission-error', permissionError);
+    }
   };
 
   if (isUserLoading || isMarksLoading) {
@@ -183,11 +203,53 @@ export default function DashboardPage() {
               <Accordion type="single" collapsible className="w-full">
                 {Object.keys(reportData[className]).sort().map(section => (
                   <AccordionItem key={section} value={section}>
-                    <AccordionTrigger className="text-xl font-semibold">{`Section ${section}`}</AccordionTrigger>
+                    <AccordionTrigger className="text-xl font-semibold flex justify-between items-center w-full">
+                      <span>{`Section ${section}`}</span>
+                      <AlertDialog onOpenChange={(open) => open && event.stopPropagation()} >
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-50 hover:opacity-100" onClick={(e) => e.stopPropagation()}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action will permanently delete all reports for Section {section} in Class {className}.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteSectionReport(className, section)}>Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </AccordionTrigger>
                     <AccordionContent className="pl-4">
                       {Object.keys(reportData[className][section]).sort().map(subject => (
-                        <div key={subject} className="mb-8">
-                          <h3 className="text-2xl font-bold tracking-tight mb-4">{subject}</h3>
+                        <div key={subject} className="mb-8 p-4 border rounded-lg">
+                          <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-2xl font-bold tracking-tight">{subject}</h3>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-50 hover:opacity-100">
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Subject Report?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete the report for {subject} in Section {section}, Class {className}? This cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteSubjectReport(className, section, subject)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                           <Dashboard 
                             studentData={reportData[className][section][subject] || []} 
                             onDeleteStudent={handleDeleteStudentMark} 

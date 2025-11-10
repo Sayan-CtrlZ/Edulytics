@@ -1,13 +1,13 @@
 
 'use client';
 
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useRef, ChangeEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PlusCircle, Trash2, Upload, Save, FileCheck } from "lucide-react";
+import { PlusCircle, Trash2, Upload, FileCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Papa from "papaparse";
 import { useFirestore, useUser, FirestorePermissionError, errorEmitter } from "@/firebase";
@@ -25,19 +25,38 @@ export function DataInputSheet() {
   const [classValue, setClassValue] = useState("");
   const [sectionValue, setSectionValue] = useState("");
   const [subjectValue, setSubjectValue] = useState("");
-  const [isSaved, setIsSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
   const router = useRouter();
 
+  useEffect(() => {
+    // Check for edit state in localStorage on component mount
+    const editDataString = localStorage.getItem('editReportData');
+    if (editDataString) {
+      try {
+        const editData = JSON.parse(editDataString);
+        setClassValue(editData.classValue || "");
+        setSectionValue(editData.sectionValue || "");
+        setSubjectValue(editData.subjectValue || "");
+        setData(editData.data || []);
+        setNextId((editData.data?.length || 0) + 1);
+        toast({ title: "Editing Mode", description: "You are editing an existing report. Save your changes to update it." });
+      } catch (e) {
+        console.error("Failed to parse edit data from localStorage", e);
+      } finally {
+        // Clear the data from localStorage after loading it
+        localStorage.removeItem('editReportData');
+      }
+    }
+  }, [toast]);
+
 
   const handleInputChange = (id: number, field: 'studentName' | 'marks', value: string) => {
     setData(currentData =>
       currentData.map(row => (row.id === id ? { ...row, [field]: value } : row))
     );
-    setIsSaved(false);
   };
 
   const addRow = () => {
@@ -46,12 +65,10 @@ export function DataInputSheet() {
       { id: nextId, studentName: "", marks: "" },
     ]);
     setNextId(prevId => prevId + 1);
-    setIsSaved(false);
   };
 
   const removeRow = (id: number) => {
     setData(currentData => currentData.filter(row => row.id !== id));
-    setIsSaved(false);
   };
 
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
@@ -96,7 +113,6 @@ export function DataInputSheet() {
 
         setData(currentData => [...currentData, ...parsedData]);
         setNextId(prevId => prevId + parsedData.length);
-        setIsSaved(false);
         toast({
           title: "Upload Successful",
           description: `${parsedData.length} rows have been added from the CSV.`,
@@ -169,9 +185,9 @@ export function DataInputSheet() {
             title: "Data Saved",
             description: "The student data has been successfully saved.",
         });
-        setIsSaved(true);
         setData([]);
         setNextId(1);
+        handleViewReport();
     } catch (error: any) {
         const permissionError = new FirestorePermissionError({
           path: `schools/${schoolId}/marks`,
@@ -181,7 +197,7 @@ export function DataInputSheet() {
     }
   };
   
-  const handleGenerateReport = () => {
+  const handleViewReport = () => {
       router.push('/');
   };
 
@@ -198,37 +214,36 @@ export function DataInputSheet() {
             <div className="flex flex-wrap gap-2 items-center">
                 <Input
                     value={classValue}
-                    onChange={e => { setClassValue(e.target.value); setIsSaved(false); }}
+                    onChange={e => setClassValue(e.target.value)}
                     placeholder="Class (e.g., 10)"
                     className="w-32"
                 />
                 <Input
                     value={sectionValue}
-                    onChange={e => { setSectionValue(e.target.value); setIsSaved(false); }}
+                    onChange={e => setSectionValue(e.target.value)}
                     placeholder="Section (e.g., A)"
                     className="w-32"
                 />
                  <Input
                     value={subjectValue}
-                    onChange={e => { setSubjectValue(e.target.value); setIsSaved(false); }}
+                    onChange={e => setSubjectValue(e.target.value)}
                     placeholder="Subject (e.g., Mathematics)"
                     className="w-48"
                 />
             </div>
             <div className="flex gap-2">
-                <Button onClick={handleSave} size="sm">
-                    <Save className="mr-2" />
-                    Save Data
-                </Button>
-                <Button onClick={handleGenerateReport} size="sm" variant="default">
+                <Button onClick={handleSave} size="sm" className="bg-primary text-primary-foreground shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5">
                     <FileCheck className="mr-2" />
-                    View Report
+                    Generate Report
+                </Button>
+                <Button onClick={handleViewReport} size="sm" variant="outline">
+                    View Dashboard
                 </Button>
           </div>
         </div>
         <div className="flex justify-start items-center mb-4">
           <div className="flex gap-2">
-            <Button onClick={addRow} size="sm" variant="default" className="bg-primary hover:bg-primary/90">
+            <Button onClick={addRow} size="sm" variant="default" className="bg-violet-600 hover:bg-violet-700">
               <PlusCircle className="mr-2" />
               Add Row
             </Button>
@@ -239,7 +254,7 @@ export function DataInputSheet() {
                 onChange={handleFileUpload}
                 accept=".csv"
             />
-            <Button onClick={triggerFileUpload} size="sm" variant="default" className="bg-primary hover:bg-primary/90">
+            <Button onClick={triggerFileUpload} size="sm" variant="default" className="bg-violet-600 hover:bg-violet-700">
                 <Upload className="mr-2" />
                 Upload CSV
             </Button>

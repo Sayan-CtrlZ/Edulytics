@@ -17,8 +17,9 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Mark } from "@/lib/data";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useRouter } from "next/navigation";
 
 interface StudentsTableProps {
   data: Mark[];
@@ -26,11 +27,34 @@ interface StudentsTableProps {
 }
 
 export default function StudentsTable({ data, onDelete }: StudentsTableProps) {
+  const router = useRouter();
+
+  const handleEdit = () => {
+    const editState = {
+      classValue: data[0]?.class || "",
+      sectionValue: data[0]?.section || "",
+      subjectValue: data[0]?.subject || "",
+      data: data.map(d => ({ id: d.id, studentName: d.studentName, marks: String(d.marks) })),
+    };
+    
+    // Store state in localStorage to pass it to the upload page
+    localStorage.setItem('editReportData', JSON.stringify(editState));
+    router.push('/upload');
+  };
+  
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Submissions</CardTitle>
-        <CardDescription>List of students and their marks.</CardDescription>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>Recent Submissions</CardTitle>
+            <CardDescription>List of students and their marks.</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleEdit}>
+            <Pencil className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[350px]">
@@ -47,9 +71,6 @@ export default function StudentsTable({ data, onDelete }: StudentsTableProps) {
                 <TableRow key={student.id}>
                   <TableCell>
                     <div className="font-medium">{student.studentName}</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      {student.subject}
-                    </div>
                   </TableCell>
                   <TableCell>{student.marks}</TableCell>
                   <TableCell className="text-right">
