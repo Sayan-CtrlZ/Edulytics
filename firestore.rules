@@ -88,7 +88,8 @@ service cloud.firestore {
     }
 
     /**
-     * @description Manages mark data within a school.
+     * @description Manages mark data within a school. Allows any authenticated user to read marks, which is necessary for the dashboard.
+     * Write operations are restricted to ensure data integrity.
      * @path /schools/{schoolId}/marks/{markId}
      * @allow (read): if isSignedIn() - Allows any authenticated user to read marks.
      * @allow (write): if isSignedIn() && request.resource.data.schoolId == schoolId - Ensures data integrity on write.
