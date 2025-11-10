@@ -49,13 +49,11 @@ export function SidebarNav() {
                   "justify-start",
                   pathname === item.href && "bg-primary/10 text-primary"
                 )}
-                as={Link}
-                href={item.href}
               >
-                <>
+                <Link href={item.href}>
                   <item.icon />
                   <span>{item.label}</span>
-                </>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
