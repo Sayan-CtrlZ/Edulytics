@@ -13,13 +13,13 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     setIsMounted(true);
   }, []);
 
-  const isLoginPage = pathname === "/login";
+  const isAuthPage = pathname === "/login" || pathname === "/signup";
 
   if (!isMounted) {
     return null; // Or a loading spinner
   }
 
-  if (isLoginPage) {
+  if (isAuthPage) {
     return <>{children}</>;
   }
 
