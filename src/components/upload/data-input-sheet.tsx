@@ -3,7 +3,6 @@
 
 import { useState, useRef, ChangeEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,6 @@ import Papa from "papaparse";
 import { useFirestore, useUser, FirestorePermissionError, errorEmitter } from "@/firebase";
 import { collection, writeBatch, doc } from "firebase/firestore";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 type StudentMark = {
   id: string; // Use string for IDs coming from edit mode
@@ -42,8 +40,6 @@ export function DataInputSheet() {
   const firestore = useFirestore();
   const { user } = useUser();
   const router = useRouter();
-
-  const csvTemplateImage = PlaceHolderImages.find((img) => img.id === "csv-template-example");
 
   useEffect(() => {
     // Check for edit state in localStorage on component mount
@@ -225,6 +221,21 @@ export function DataInputSheet() {
       router.push('/');
   };
 
+  const downloadTemplate = () => {
+    const csvContent = "studentName,marks\nJohn Doe,95\nJane Smith,88\n";
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "student_marks_template.csv");
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -271,7 +282,7 @@ export function DataInputSheet() {
                 </Button>
           </div>
         </div>
-        <div className="flex justify-start items-center mb-4">
+        <div className="flex justify-between items-center mb-4">
           <div className="flex gap-2">
             <Button onClick={addRow} size="sm" variant="default" className="bg-violet-600 hover:bg-violet-700">
               <PlusCircle className="mr-2" />
@@ -289,6 +300,9 @@ export function DataInputSheet() {
                 Upload CSV
             </Button>
           </div>
+          <Button onClick={downloadTemplate} size="sm" variant="link">
+              Download Template
+          </Button>
         </div>
         <div className="overflow-auto rounded-md border" style={{maxHeight: '40vh'}}>
           <Table>
@@ -341,18 +355,26 @@ export function DataInputSheet() {
         )}
         <div className="mt-8">
             <h3 className="text-lg font-medium mb-2">CSV Upload Format Example</h3>
-            {csvTemplateImage && (
-              <div className="relative w-full max-w-md rounded-md border overflow-hidden">
-                <Image
-                    src={csvTemplateImage.imageUrl}
-                    alt={csvTemplateImage.description}
-                    data-ai-hint={csvTemplateImage.imageHint}
-                    width={600}
-                    height={150}
-                    className="object-contain"
-                />
-              </div>
-            )}
+            <div className="border rounded-md p-4 bg-muted/50 w-full max-w-md">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="font-semibold text-foreground">studentName</TableHead>
+                            <TableHead className="font-semibold text-foreground">marks</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow>
+                            <TableCell>John Doe</TableCell>
+                            <TableCell>95</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>Jane Smith</TableCell>
+                            <TableCell>88</TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </div>
         </div>
       </CardContent>
     </Card>
