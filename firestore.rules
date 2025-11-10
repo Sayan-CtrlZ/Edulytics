@@ -121,14 +121,15 @@ service cloud.firestore {
     }
 
     /**
-     * @description Manages user profile data. Users can read and write their own profile information.
+     * @description Manages user profile data. Users can manage their own profile information.
      * @path /users/{userId}
-     * @allow (read): if isSignedIn() && request.auth.uid == userId
-     * @allow (write): if isSignedIn() && request.auth.uid == userId
+     * @allow (read, write): if isSignedIn() && request.auth.uid == userId
      * @principle Enforces user ownership of their own profile data.
      */
     match /users/{userId} {
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow write: if isSignedIn() && request.auth.uid == userId;
+      allow delete: if isSignedIn() && request.auth.uid == userId;
     }
 
     function isSignedIn() {
@@ -136,5 +137,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

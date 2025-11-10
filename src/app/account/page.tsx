@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useUser, useAuth } from '@/firebase';
+import { useUser, useAuth, useFirestore } from '@/firebase';
 import { redirect, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -19,10 +19,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { sendPasswordResetEmail, deleteUser } from 'firebase/auth';
+import { doc, deleteDoc } from 'firebase/firestore';
 
 export default function AccountPage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -51,20 +53,30 @@ export default function AccountPage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!auth.currentUser) {
+    if (!auth.currentUser || !firestore) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No user is currently signed in.",
+        description: "No user is currently signed in or database is not available.",
       });
       return;
     }
+    
+    const userId = auth.currentUser.uid;
+
     try {
+      // First, delete the user's document from Firestore
+      const userDocRef = doc(firestore, 'users', userId);
+      await deleteDoc(userDocRef);
+
+      // Then, delete the user from Firebase Authentication
       await deleteUser(auth.currentUser);
+      
       toast({
         title: "Account Deleted",
-        description: "Your account has been permanently deleted.",
+        description: "Your account and all associated data have been permanently deleted.",
       });
+
       router.push('/login');
     } catch (error: any) {
       toast({
