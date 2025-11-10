@@ -4,6 +4,9 @@
 import { redirect } from "next/navigation";
 import type { ZodError } from 'zod';
 import { v2 as cloudinary } from 'cloudinary';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 cloudinary.config({ 
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
@@ -40,7 +43,7 @@ export async function uploadFile(prevState: FormState, formData: FormData): Prom
     const buffer = Buffer.from(arrayBuffer);
 
     const results: any = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
+      const uploadStream = cloudinary.uploader.upload_stream(
         { 
           upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET
         },
@@ -50,7 +53,8 @@ export async function uploadFile(prevState: FormState, formData: FormData): Prom
           }
           return resolve(result);
         }
-      ).end(buffer);
+      );
+      uploadStream.end(buffer);
     });
 
     if (!results || !results.secure_url) {
