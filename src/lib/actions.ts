@@ -44,9 +44,6 @@ export async function uploadFile(prevState: FormState, formData: FormData): Prom
 
     const results: any = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { 
-            // The preset is not needed for backend uploads with api_secret
-        },
         (error, result) => {
           if (error) {
             return reject(error);
