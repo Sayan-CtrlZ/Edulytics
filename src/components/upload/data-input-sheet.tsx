@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { PlusCircle, Trash2, Upload, Save, FileCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Papa from "papaparse";
-import { useFirestore, useUser } from "@/firebase";
+import { useFirestore, useUser, FirestorePermissionError, errorEmitter } from "@/firebase";
 import { collection, writeBatch, doc } from "firebase/firestore";
 
 type StudentMark = {
@@ -89,7 +89,7 @@ export function DataInputSheet() {
             toast({
                 variant: "destructive",
                 title: "Parsing Error",
-                description: "Could not parse student data from the CSV. Please check the file format and headers.",
+                description: "Could not parse valid 'studentName' and 'marks' columns from the CSV. Please check the file.",
             });
             return;
         }
@@ -137,14 +137,16 @@ export function DataInputSheet() {
     const schoolId = "school-1";
     const marksCollection = collection(firestore, `schools/${schoolId}/marks`);
     const batch = writeBatch(firestore);
-
+    
+    let hasValidData = false;
     data.forEach(row => {
         if (row.studentName && row.marks) {
+            hasValidData = true;
             const newMarkRef = doc(marksCollection);
             const markData = {
                 id: newMarkRef.id,
                 schoolId: schoolId,
-                studentId: row.studentName.toLowerCase().replace(/\s+/g, '-'), // simple ID generation
+                studentId: `${schoolId}-${classValue}-${sectionValue}-${row.studentName.toLowerCase().replace(/\s+/g, '-')}`,
                 studentName: row.studentName,
                 class: classValue,
                 section: sectionValue,
@@ -156,6 +158,11 @@ export function DataInputSheet() {
         }
     });
 
+    if (!hasValidData) {
+        toast({ variant: "destructive", title: "No Data", description: "No valid rows to save." });
+        return;
+    }
+
     try {
         await batch.commit();
         toast({
@@ -166,25 +173,16 @@ export function DataInputSheet() {
         setData([]);
         setNextId(1);
     } catch (error: any) {
-        console.error("Error saving data:", error);
-        toast({
-            variant: "destructive",
-            title: "Uh oh! Something went wrong.",
-            description: "Could not save the data. Please try again.",
+        const permissionError = new FirestorePermissionError({
+          path: `schools/${schoolId}/marks`,
+          operation: 'create',
         });
+        errorEmitter.emit('permission-error', permissionError);
     }
   };
   
   const handleGenerateReport = () => {
-    if(isSaved) {
       router.push('/');
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Save Required",
-        description: "Please save your data before generating a report.",
-      });
-    }
   };
 
   return (
@@ -192,7 +190,7 @@ export function DataInputSheet() {
       <CardHeader>
         <CardTitle>Data Entry Sheet</CardTitle>
         <CardDescription>
-          Specify the class, section, and subject, then add records or upload a CSV with columns: studentName, marks.
+          Specify the class, section, and subject, then add student records or upload a CSV with 'studentName' and 'marks' columns.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -213,7 +211,7 @@ export function DataInputSheet() {
                  <Input
                     value={subjectValue}
                     onChange={e => { setSubjectValue(e.target.value); setIsSaved(false); }}
-                    placeholder="Subject (e.g., Math)"
+                    placeholder="Subject (e.g., Mathematics)"
                     className="w-48"
                 />
             </div>
@@ -230,7 +228,7 @@ export function DataInputSheet() {
         </div>
         <div className="flex justify-start items-center mb-4">
           <div className="flex gap-2">
-            <Button onClick={addRow} size="sm" variant="default">
+            <Button onClick={addRow} size="sm" variant="default" className="bg-primary hover:bg-primary/90">
               <PlusCircle className="mr-2" />
               Add Row
             </Button>
@@ -241,7 +239,7 @@ export function DataInputSheet() {
                 onChange={handleFileUpload}
                 accept=".csv"
             />
-            <Button onClick={triggerFileUpload} size="sm" variant="default">
+            <Button onClick={triggerFileUpload} size="sm" variant="default" className="bg-primary hover:bg-primary/90">
                 <Upload className="mr-2" />
                 Upload CSV
             </Button>

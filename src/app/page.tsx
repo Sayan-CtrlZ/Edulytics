@@ -13,13 +13,15 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Upload, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from '@/hooks/use-toast';
 
-type ClassSection = {
-  id: string;
-  name: string;
-  class: string;
-  section: string;
+type ReportStructure = {
+  [className: string]: {
+    [section: string]: {
+      [subject: string]: Mark[];
+    };
+  };
 };
 
 export default function DashboardPage() {
@@ -36,55 +38,43 @@ export default function DashboardPage() {
 
   const { data: allMarks, isLoading: isMarksLoading, error } = useCollection<Mark>(marksQuery);
 
-  const [activeTab, setActiveTab] = useState<string | undefined>();
-  
-  const classSections = useMemo(() => {
-    if (!allMarks) return [];
-    const uniqueClassSections = new Map<string, ClassSection>();
+  const [activeClassTab, setActiveClassTab] = useState<string | undefined>();
+
+  const { reportData, classes } = useMemo(() => {
+    if (!allMarks) return { reportData: {}, classes: [] };
+    
+    const data: ReportStructure = {};
     allMarks.forEach(mark => {
-      const classSectionId = `${mark.class}-${mark.section}`;
-      if (!uniqueClassSections.has(classSectionId)) {
-        uniqueClassSections.set(classSectionId, {
-          id: classSectionId,
-          name: `Class ${mark.class}-${mark.section}`,
-          class: mark.class,
-          section: mark.section,
-        });
+      const { class: className, section, subject } = mark;
+      if (!data[className]) {
+        data[className] = {};
       }
+      if (!data[className][section]) {
+        data[className][section] = {};
+      }
+      if (!data[className][section][subject]) {
+        data[className][section][subject] = [];
+      }
+      data[className][section][subject].push(mark);
     });
-    const sections = Array.from(uniqueClassSections.values());
-    if (sections.length > 0 && !activeTab) {
-      setActiveTab(sections[0].id);
-    } else if (sections.length === 0) {
-      setActiveTab(undefined);
-    } else {
-      // If the active tab is no longer valid, reset it
-      const currentTabExists = sections.some(s => s.id === activeTab);
-      if (!currentTabExists && sections.length > 0) {
-        setActiveTab(sections[0].id);
-      } else if (sections.length === 0) {
-        setActiveTab(undefined);
-      }
+
+    const classNames = Object.keys(data).sort();
+    if (classNames.length > 0 && (!activeClassTab || !classNames.includes(activeClassTab))) {
+      setActiveClassTab(classNames[0]);
+    } else if (classNames.length === 0) {
+      setActiveClassTab(undefined);
     }
-    return sections;
-  }, [allMarks, activeTab]);
+    
+    return { reportData: data, classes: classNames };
+  }, [allMarks, activeClassTab]);
 
-  const marksByClassSection = useMemo(() => {
-    const grouped: { [key: string]: Mark[] } = {};
-    if (!allMarks) return grouped;
-    classSections.forEach(cs => {
-      grouped[cs.id] = allMarks.filter(mark => `${mark.class}-${mark.section}` === cs.id);
-    });
-    return grouped;
-  }, [allMarks, classSections]);
-
-  const handleDeleteClassReport = async (classToDelete: string, sectionToDelete: string) => {
+  const handleDeleteClassReport = async (classToDelete: string) => {
     if (!firestore) {
       toast({ variant: 'destructive', title: 'Error', description: 'Cannot connect to database.' });
       return;
     }
     const marksCollectionRef = collection(firestore, `schools/${schoolId}/marks`);
-    const q = query(marksCollectionRef, where("class", "==", classToDelete), where("section", "==", sectionToDelete));
+    const q = query(marksCollectionRef, where("class", "==", classToDelete));
     
     try {
       const querySnapshot = await getDocs(q);
@@ -97,17 +87,13 @@ export default function DashboardPage() {
         batch.delete(doc.ref);
       });
       
-      // The batch itself doesn't have a specific error handler we can use for permission errors in the same way.
-      // We will commit and catch. A failure here is likely a permission issue on one of the documents.
       await batch.commit();
 
-      toast({ title: 'Success', description: `Report for Class ${classToDelete}-${sectionToDelete} has been deleted.` });
+      toast({ title: 'Success', description: `All reports for Class ${classToDelete} have been deleted.` });
     } catch (error) {
-       // Since batch delete involves multiple docs, we can't pinpoint one.
-       // We emit a generic but structured error for the collection.
        const permissionError = new FirestorePermissionError({
         path: `schools/${schoolId}/marks`,
-        operation: 'delete', // Batch delete is a series of deletes
+        operation: 'delete',
       });
       errorEmitter.emit('permission-error', permissionError);
     }
@@ -117,9 +103,6 @@ export default function DashboardPage() {
     if (!firestore) return;
     const docRef = doc(firestore, `schools/${schoolId}/marks`, markId);
     deleteDoc(docRef)
-      .then(() => {
-        toast({ title: 'Success', description: 'Student mark deleted.' });
-      })
       .catch((error) => {
         const permissionError = new FirestorePermissionError({
           path: docRef.path,
@@ -138,7 +121,6 @@ export default function DashboardPage() {
   }
 
   if (error) {
-    // The useCollection hook will now throw a contextual error which is caught by the error boundary
     return null;
   }
 
@@ -168,12 +150,12 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
       
-      {classSections.length > 0 && (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+      {classes.length > 0 && (
+        <Tabs value={activeClassTab} onValueChange={setActiveClassTab}>
           <TabsList className="relative flex flex-wrap h-auto justify-start">
-            {classSections.map(cs => (
-              <div key={cs.id} className="relative group pr-8">
-                <TabsTrigger value={cs.id}>{cs.name}</TabsTrigger>
+            {classes.map(className => (
+              <div key={className} className="relative group pr-8">
+                <TabsTrigger value={className}>{`Class ${className}`}</TabsTrigger>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="icon" className="absolute top-1/2 right-1 -translate-y-1/2 h-6 w-6 opacity-50 group-hover:opacity-100 transition-opacity">
@@ -184,24 +166,38 @@ export default function DashboardPage() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This will permanently delete the entire report for {cs.name}. This action cannot be undone.
+                        This will permanently delete all reports for {`Class ${className}`}. This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDeleteClassReport(cs.class, cs.section)}>Delete</AlertDialogAction>
+                      <AlertDialogAction onClick={() => handleDeleteClassReport(className)}>Delete</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
             ))}
           </TabsList>
-          {classSections.map(cs => (
-            <TabsContent key={cs.id} value={cs.id} className="mt-4">
-              <Dashboard 
-                studentData={marksByClassSection[cs.id] || []} 
-                onDeleteStudent={handleDeleteStudentMark} 
-              />
+          {classes.map(className => (
+            <TabsContent key={className} value={className} className="mt-4">
+              <Accordion type="single" collapsible className="w-full">
+                {Object.keys(reportData[className]).sort().map(section => (
+                  <AccordionItem key={section} value={section}>
+                    <AccordionTrigger className="text-xl font-semibold">{`Section ${section}`}</AccordionTrigger>
+                    <AccordionContent className="pl-4">
+                      {Object.keys(reportData[className][section]).sort().map(subject => (
+                        <div key={subject} className="mb-8">
+                          <h3 className="text-2xl font-bold tracking-tight mb-4">{subject}</h3>
+                          <Dashboard 
+                            studentData={reportData[className][section][subject] || []} 
+                            onDeleteStudent={handleDeleteStudentMark} 
+                          />
+                        </div>
+                      ))}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </TabsContent>
           ))}
         </Tabs>
