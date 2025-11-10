@@ -12,12 +12,22 @@ import { useToast } from "@/hooks/use-toast";
 import Papa from "papaparse";
 import { useFirestore, useUser, FirestorePermissionError, errorEmitter } from "@/firebase";
 import { collection, writeBatch, doc } from "firebase/firestore";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type StudentMark = {
-  id: number;
+  id: string; // Use string for IDs coming from edit mode
   studentName: string;
   marks: string;
 };
+
+const classOptions = ["Nursery", "LKG", "UKG", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+const sectionOptions = ["A", "B", "C", "D", "E", "F"];
+const subjectOptions = [
+  "Mathematics", "Science", "English", "Social Studies", "History", "Geography", 
+  "Physics", "Chemistry", "Biology", "Computer Science", "Hindi", "Art", 
+  "Music", "Physical Education"
+];
+
 
 export function DataInputSheet() {
   const [data, setData] = useState<StudentMark[]>([]);
@@ -40,7 +50,7 @@ export function DataInputSheet() {
         setClassValue(editData.classValue || "");
         setSectionValue(editData.sectionValue || "");
         setSubjectValue(editData.subjectValue || "");
-        setData(editData.data || []);
+        setData(editData.data.map((d: any, i: number) => ({...d, id: d.id || `edit-${i}`})) || []);
         setNextId((editData.data?.length || 0) + 1);
         toast({ title: "Editing Mode", description: "You are editing an existing report. Save your changes to update it." });
       } catch (e) {
@@ -53,21 +63,22 @@ export function DataInputSheet() {
   }, [toast]);
 
 
-  const handleInputChange = (id: number, field: 'studentName' | 'marks', value: string) => {
+  const handleInputChange = (id: string | number, field: 'studentName' | 'marks', value: string) => {
     setData(currentData =>
       currentData.map(row => (row.id === id ? { ...row, [field]: value } : row))
     );
   };
 
   const addRow = () => {
+    const newId = `new-${nextId}`;
     setData(currentData => [
       ...currentData,
-      { id: nextId, studentName: "", marks: "" },
+      { id: newId, studentName: "", marks: "" },
     ]);
     setNextId(prevId => prevId + 1);
   };
 
-  const removeRow = (id: number) => {
+  const removeRow = (id: string | number) => {
     setData(currentData => currentData.filter(row => row.id !== id));
   };
 
@@ -93,14 +104,14 @@ export function DataInputSheet() {
 
             if (studentName && marks) {
               return {
-                id: nextId + index,
+                id: `csv-${nextId + index}`,
                 studentName: String(studentName),
                 marks: String(marks),
               };
             }
             return null;
           })
-          .filter((row): row is StudentMark => row !== null);
+          .filter((row): row is StudentMark => row !== null && !!row.studentName && !!row.marks);
 
         if (parsedData.length === 0) {
             toast({
@@ -158,9 +169,10 @@ export function DataInputSheet() {
     data.forEach(row => {
         if (row.studentName && row.marks) {
             hasValidData = true;
-            const newMarkRef = doc(marksCollection);
+            const markId = typeof row.id === 'string' && row.id.startsWith('edit-') ? row.id.substring(5) : doc(marksCollection).id;
+            const docRef = doc(marksCollection, markId);
             const markData = {
-                id: newMarkRef.id,
+                id: markId,
                 schoolId: schoolId,
                 studentId: `${schoolId}-${classValue}-${sectionValue}-${row.studentName.toLowerCase().replace(/\s+/g, '-')}`,
                 studentName: row.studentName,
@@ -170,7 +182,7 @@ export function DataInputSheet() {
                 marks: Number(row.marks),
                 dateTaken: new Date().toISOString(),
             };
-            batch.set(newMarkRef, markData);
+            batch.set(docRef, markData, { merge: true });
         }
     });
 
@@ -212,24 +224,30 @@ export function DataInputSheet() {
       <CardContent>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
             <div className="flex flex-wrap gap-2 items-center">
-                <Input
-                    value={classValue}
-                    onChange={e => setClassValue(e.target.value)}
-                    placeholder="Class (e.g., 10)"
-                    className="w-32"
-                />
-                <Input
-                    value={sectionValue}
-                    onChange={e => setSectionValue(e.target.value)}
-                    placeholder="Section (e.g., A)"
-                    className="w-32"
-                />
-                 <Input
-                    value={subjectValue}
-                    onChange={e => setSubjectValue(e.target.value)}
-                    placeholder="Subject (e.g., Mathematics)"
-                    className="w-48"
-                />
+                <Select value={classValue} onValueChange={setClassValue}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select Class" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classOptions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={sectionValue} onValueChange={setSectionValue}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select Section" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sectionOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={subjectValue} onValueChange={setSubjectValue}>
+                  <SelectTrigger className="w-[240px]">
+                    <SelectValue placeholder="Select Subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjectOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
             </div>
             <div className="flex gap-2">
                 <Button onClick={handleSave} size="sm" className="bg-primary text-primary-foreground shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5">
