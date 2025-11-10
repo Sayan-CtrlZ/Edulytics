@@ -25,8 +25,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-body antialiased bg-gradient-to-br from-background to-blue-100/50 dark:to-blue-950/20`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
           disableTransitionOnChange
         >
           <FirebaseClientProvider>
