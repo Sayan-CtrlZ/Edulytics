@@ -1,30 +1,31 @@
 
 'use client';
 
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { redirect } from 'next/navigation';
-import { getStudentData } from '@/lib/data';
 import Dashboard from '@/components/dashboard/dashboard';
 import { useEffect, useState, useMemo } from 'react';
-import type { Student } from '@/lib/data';
+import type { Mark } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { collection } from 'firebase/firestore';
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
-  const [allStudents, setAllStudents] = useState<Student[]>([]);
+  const firestore = useFirestore();
 
-  useEffect(() => {
-    async function fetchData() {
-      const studentData = await getStudentData();
-      setAllStudents(studentData);
-    }
-    fetchData();
-  }, []);
+  const schoolId = "school-1"; // Hardcoded for now
+  
+  const marksQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, `schools/${schoolId}/marks`);
+  }, [firestore, schoolId]);
 
-  const students10A = useMemo(() => allStudents.filter(s => s.class === '10' && s.section === 'A'), [allStudents]);
-  const students10B = useMemo(() => allStudents.filter(s => s.class === '10' && s.section === 'B'), [allStudents]);
+  const { data: allMarks, isLoading: isMarksLoading } = useCollection<Mark>(marksQuery);
 
-  if (isUserLoading || allStudents.length === 0) {
+  const students10A = useMemo(() => allMarks?.filter(s => s.class === '10' && s.section === 'A') || [], [allMarks]);
+  const students10B = useMemo(() => allMarks?.filter(s => s.class === '10' && s.section === 'B') || [], [allMarks]);
+
+  if (isUserLoading || isMarksLoading) {
     return <div>Loading...</div>; // Or a spinner
   }
 

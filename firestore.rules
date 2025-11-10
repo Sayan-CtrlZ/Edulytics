@@ -88,20 +88,13 @@ service cloud.firestore {
     }
 
     /**
-     * @description Manages mark data within a school. Only authenticated users can manage mark data within a school. The markId in the path must match the markId in the document. The schoolId in the path must match the schoolId in the document.
+     * @description Manages mark data within a school. Only authenticated users can manage mark data within a school. The schoolId in the path must match the schoolId in the document.
      * @path /schools/{schoolId}/marks/{markId}
-     * @allow (get, list): if isSignedIn()
-     * @allow (create): if isSignedIn() && request.resource.data.schoolId == schoolId && request.resource.data.id == markId
-     * @allow (update, delete): if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == markId
-     * @deny create: if request.resource.data.schoolId != schoolId || request.resource.data.id != markId
-     * @deny update: if resource.data.schoolId != schoolId || resource.data.id != markId
-     * @principle Enforces school-based ownership and mark identity verification
+     * @allow (get, list, create, update, delete): if isSignedIn() && request.resource.data.schoolId == schoolId
+     * @principle Enforces school-based ownership and data integrity.
      */
     match /schools/{schoolId}/marks/{markId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.schoolId == schoolId && request.resource.data.id == markId;
-      allow update: if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == markId;
-      allow delete: if isSignedIn() && resource.data.schoolId == schoolId && resource.data.id == markId;
+      allow read, write: if isSignedIn() && request.resource.data.schoolId == schoolId;
     }
 
     /**

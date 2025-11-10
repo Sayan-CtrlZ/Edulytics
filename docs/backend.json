@@ -128,9 +128,29 @@
           "type": "string",
           "description": "Reference to Student. (Relationship: Student 1:N Mark)"
         },
+        "studentName": {
+          "type": "string",
+          "description": "Denormalized name of the student for easy display."
+        },
+        "schoolId": {
+          "type": "string",
+          "description": "Reference to School for authorization."
+        },
+        "class": {
+          "type": "string",
+          "description": "Class of the student."
+        },
+        "section": {
+          "type": "string",
+          "description": "Section of the student's class."
+        },
         "subjectId": {
           "type": "string",
           "description": "Reference to Subject. (Relationship: Subject 1:N Mark)"
+        },
+        "subject": {
+          "type": "string",
+          "description": "Denormalized name of the subject."
         },
         "marks": {
           "type": "number",
@@ -145,8 +165,13 @@
       "required": [
         "id",
         "studentId",
-        "subjectId",
-        "marks"
+        "studentName",
+        "schoolId",
+        "class",
+        "section",
+        "subject",
+        "marks",
+        "dateTaken"
       ]
     },
     "Upload": {

@@ -15,10 +15,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { Student } from "@/lib/data";
+import type { Mark } from "@/lib/data";
 
 interface StudentsTableProps {
-  data: Student[];
+  data: Mark[];
 }
 
 export default function StudentsTable({ data }: StudentsTableProps) {
@@ -41,7 +41,7 @@ export default function StudentsTable({ data }: StudentsTableProps) {
               {data.map((student) => (
                 <TableRow key={student.id}>
                   <TableCell>
-                    <div className="font-medium">{student.name}</div>
+                    <div className="font-medium">{student.studentName}</div>
                     <div className="hidden text-sm text-muted-foreground md:inline">
                       {student.subject}
                     </div>

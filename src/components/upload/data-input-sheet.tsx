@@ -9,6 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { PlusCircle, Trash2, Upload, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Papa from "papaparse";
+import { useFirestore, useUser } from "@/firebase";
+import { collection, writeBatch, doc } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 type StudentMark = {
   id: number;
@@ -26,6 +29,8 @@ export function DataInputSheet() {
   const [nextId, setNextId] = useState(2);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const firestore = useFirestore();
+  const { user } = useUser();
 
   const handleInputChange = (id: number, field: keyof StudentMark, value: string) => {
     setData(currentData =>
@@ -118,14 +123,57 @@ export function DataInputSheet() {
     fileInputRef.current?.click();
   };
 
-  const handleSave = () => {
-    // Here you would typically send the data to your backend/server action
-    console.log("Saving data:", data);
-    toast({
-      title: "Data Saved",
-      description: "The student data has been successfully saved.",
+  const handleSave = async () => {
+    if (!firestore || !user) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not connect to the database. Please try again.",
+      });
+      return;
+    }
+
+    const schoolId = "school-1"; // Hardcoded for now
+    const marksCollection = collection(firestore, `schools/${schoolId}/marks`);
+    const batch = writeBatch(firestore);
+
+    data.forEach(row => {
+        if (row.studentName && row.subject && row.marks) {
+            const newMarkRef = doc(marksCollection);
+            const markData = {
+                id: newMarkRef.id,
+                schoolId: schoolId,
+                studentId: row.studentName.toLowerCase().replace(/\s+/g, '-'), // simple ID generation
+                studentName: row.studentName,
+                class: row.class,
+                section: row.section,
+                subject: row.subject,
+                marks: Number(row.marks),
+                dateTaken: new Date().toISOString(),
+            };
+            batch.set(newMarkRef, markData);
+        }
     });
-  };
+
+    try {
+        await batch.commit();
+        toast({
+            title: "Data Saved",
+            description: "The student data has been successfully saved.",
+        });
+        // Optionally clear the table after saving
+        setData([]);
+        setNextId(1);
+
+    } catch (error: any) {
+        console.error("Error saving data:", error);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "Could not save the data. Please try again.",
+        });
+    }
+};
 
   return (
     <Card>
