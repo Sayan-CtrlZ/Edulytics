@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PlusCircle, Trash2, Upload, FileCheck } from "lucide-react";
+import { PlusCircle, Trash2, Upload, FileCheck, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Papa from "papaparse";
 import { useFirestore, useUser, FirestorePermissionError, errorEmitter } from "@/firebase";
@@ -99,8 +99,8 @@ export function DataInputSheet() {
       complete: (results) => {
         const parsedData = results.data
           .map((row, index) => {
-            const studentName = row.studentName || row.StudentName || row.name || row.Name;
-            const marks = row.marks || row.Marks || row.score || row.Score;
+            const studentName = row.studentName;
+            const marks = row.marks;
 
             if (studentName && marks) {
               return {
@@ -166,10 +166,19 @@ export function DataInputSheet() {
     const batch = writeBatch(firestore);
     
     let hasValidData = false;
+    const existingIds = data.filter(d => typeof d.id === 'string' && !d.id.startsWith('new-')).map(d => d.id);
+
     data.forEach(row => {
         if (row.studentName && row.marks) {
             hasValidData = true;
-            const markId = typeof row.id === 'string' && row.id.startsWith('edit-') ? row.id.substring(5) : doc(marksCollection).id;
+            let markId;
+            // If the ID is from an existing document being edited, use it. Otherwise, generate a new one.
+            if (typeof row.id === 'string' && !row.id.startsWith('new-') && !row.id.startsWith('csv-')) {
+              markId = row.id;
+            } else {
+              markId = doc(marksCollection).id;
+            }
+            
             const docRef = doc(marksCollection, markId);
             const markData = {
                 id: markId,
@@ -211,6 +220,21 @@ export function DataInputSheet() {
   
   const handleViewReport = () => {
       router.push('/');
+  };
+
+  const handleDownloadTemplate = () => {
+    const csvContent = "studentName,marks\nJohn Doe,95\nJane Smith,88\n";
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    if (link.href) {
+        URL.revokeObjectURL(link.href);
+    }
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute("download", "student_marks_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -275,6 +299,10 @@ export function DataInputSheet() {
             <Button onClick={triggerFileUpload} size="sm" variant="default" className="bg-violet-600 hover:bg-violet-700">
                 <Upload className="mr-2" />
                 Upload CSV
+            </Button>
+             <Button onClick={handleDownloadTemplate} size="sm" variant="outline">
+                <Download className="mr-2" />
+                Download Template
             </Button>
           </div>
         </div>
