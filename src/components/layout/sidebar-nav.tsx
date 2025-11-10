@@ -27,6 +27,11 @@ const menuItems = [
   { href: "/upload", label: "Upload Data", icon: Upload },
 ];
 
+const secondaryMenuItems = [
+    { href: "/settings", label: "Settings", icon: Settings },
+    { href: "/support", label: "Support", icon: LifeBuoy, disabled: true },
+]
+
 export function SidebarNav() {
   const pathname = usePathname();
 
@@ -65,18 +70,22 @@ export function SidebarNav() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Settings" className="justify-start">
-              <Settings />
-              <span className="group-data-[collapsible=icon]:hidden">Settings</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Support" className="justify-start">
-              <LifeBuoy />
-              <span className="group-data-[collapsible=icon]:hidden">Support</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+            {secondaryMenuItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                    asChild
+                    isActive={pathname.startsWith(item.href)}
+                    tooltip={item.label}
+                    disabled={item.disabled}
+                    className="justify-start"
+                    >
+                    <Link href={item.href}>
+                        <item.icon />
+                        <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                    </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            ))}
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
