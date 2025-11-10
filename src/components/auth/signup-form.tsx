@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
+import { Terminal, Eye, EyeOff } from "lucide-react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/firebase";
 
 export function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const auth = useAuth();
@@ -29,10 +30,13 @@ export function SignupForm() {
       router.push("/");
     } catch (err: any) {
       setError("An unexpected error occurred during sign up. Please try again.");
-      console.error(err);
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -56,16 +60,32 @@ export function SignupForm() {
           onChange={(e) => setEmail(e.target.value)}
         />
       </div>
-      <div className="grid gap-2">
+      <div className="grid gap-2 relative">
         <Label htmlFor="password">Password</Label>
         <Input
           id="password"
           name="password"
-          type="password"
+          type={showPassword ? "text" : "password"}
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="absolute right-0 top-6 h-8 w-8"
+          onClick={togglePasswordVisibility}
+        >
+          {showPassword ? (
+            <EyeOff className="h-4 w-4" />
+          ) : (
+            <Eye className="h-4 w-4" />
+          )}
+          <span className="sr-only">
+            {showPassword ? "Hide password" : "Show password"}
+          </span>
+        </Button>
       </div>
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Creating Account..." : "Sign Up"}
