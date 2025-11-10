@@ -15,6 +15,7 @@ import { useAuth, useUser } from "@/firebase";
 import { LogOut, Settings, User as UserIcon, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function UserNav() {
   const { user } = useUser();
@@ -30,7 +31,10 @@ export function UserNav() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full border-2 border-primary/50 hover:border-primary">
-          <UserIcon className="h-5 w-5" />
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={user?.photoURL ?? ''} alt={user?.displayName ?? ''} />
+            <AvatarFallback>{user?.email?.charAt(0).toUpperCase()}</AvatarFallback>
+          </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
