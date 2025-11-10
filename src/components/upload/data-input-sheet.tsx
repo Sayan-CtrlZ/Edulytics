@@ -214,7 +214,7 @@ export function DataInputSheet() {
                     value={subjectValue}
                     onChange={e => { setSubjectValue(e.target.value); setIsSaved(false); }}
                     placeholder="Subject (e.g., Math)"
-                    className="w-32"
+                    className="w-48"
                 />
             </div>
             <div className="flex gap-2">
