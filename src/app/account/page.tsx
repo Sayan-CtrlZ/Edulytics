@@ -1,31 +1,17 @@
 
 'use client';
 
-import { useUser, useAuth, useFirestore } from '@/firebase';
-import { redirect, useRouter } from 'next/navigation';
+import { useUser, useAuth } from '@/firebase';
+import { redirect } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import { sendPasswordResetEmail, deleteUser } from 'firebase/auth';
-import { doc, deleteDoc } from 'firebase/firestore';
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 export default function AccountPage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
-  const firestore = useFirestore();
-  const router = useRouter();
   const { toast } = useToast();
 
   const handleChangePassword = async () => {
@@ -48,41 +34,6 @@ export default function AccountPage() {
         variant: "destructive",
         title: "Error Sending Email",
         description: error.message || "Failed to send password reset email.",
-      });
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (!auth.currentUser || !firestore) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No user is currently signed in or database is not available.",
-      });
-      return;
-    }
-    
-    const userId = auth.currentUser.uid;
-
-    try {
-      // First, delete the user's document from Firestore
-      const userDocRef = doc(firestore, 'users', userId);
-      await deleteDoc(userDocRef);
-
-      // Then, delete the user from Firebase Authentication
-      await deleteUser(auth.currentUser);
-      
-      toast({
-        title: "Account Deleted",
-        description: "Your account and all associated data have been permanently deleted.",
-      });
-
-      router.push('/login');
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error Deleting Account",
-        description: error.message || "Failed to delete account. Please try again.",
       });
     }
   };
@@ -114,34 +65,6 @@ export default function AccountPage() {
               </p>
             </div>
             <Button variant="outline" onClick={handleChangePassword}>Change Password</Button>
-          </div>
-           <div className="flex items-center justify-between rounded-lg border border-destructive/50 p-4">
-            <div>
-              <Label className="text-base text-destructive">Delete Account</Label>
-               <p className="text-sm text-muted-foreground">
-                Permanently delete your account and all associated data.
-              </p>
-            </div>
-            <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button variant="destructive">Delete Account</Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete your
-                        account and remove your data from our servers.
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteAccount}>
-                        Continue
-                    </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
           </div>
         </CardContent>
       </Card>
