@@ -3,42 +3,28 @@
 
 import { useUser } from '@/firebase';
 import { redirect } from 'next/navigation';
-import { getStudentData, calculateStatistics } from '@/lib/data';
-
-import { StatsGrid } from '@/components/dashboard/stats-grid';
-import StudentsChart from '@/components/dashboard/students-chart';
-import StudentsTable from '@/components/dashboard/students-table';
-import { useEffect, useState } from 'react';
+import { getStudentData } from '@/lib/data';
+import Dashboard from '@/components/dashboard/dashboard';
+import { useEffect, useState, useMemo } from 'react';
 import type { Student } from '@/lib/data';
-
-type Stats = {
-  mean: number;
-  median: number;
-  mode: number | null;
-  max: number;
-  min: number;
-};
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
-  const [students, setStudents] = useState<Student[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [chartData, setChartData] = useState<{ name: string; marks: number }[]>([]);
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
 
   useEffect(() => {
     async function fetchData() {
       const studentData = await getStudentData();
-      const calculatedStats = calculateStatistics(studentData);
-      const newChartData = studentData.map(s => ({ name: s.name, marks: s.marks }));
-      
-      setStudents(studentData);
-      setStats(calculatedStats);
-      setChartData(newChartData);
+      setAllStudents(studentData);
     }
     fetchData();
   }, []);
 
-  if (isUserLoading) {
+  const students10A = useMemo(() => allStudents.filter(s => s.class === '10' && s.section === 'A'), [allStudents]);
+  const students10B = useMemo(() => allStudents.filter(s => s.class === '10' && s.section === 'B'), [allStudents]);
+
+  if (isUserLoading || allStudents.length === 0) {
     return <div>Loading...</div>; // Or a spinner
   }
 
@@ -46,25 +32,22 @@ export default function DashboardPage() {
     redirect('/login');
   }
 
-  if (!stats) {
-    return <div>Loading dashboard data...</div>; // Or a spinner
-  }
-
-
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
       
-      <StatsGrid stats={stats} />
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <StudentsChart data={chartData} />
-        </div>
-        <div>
-          <StudentsTable data={students} />
-        </div>
-      </div>
+      <Tabs defaultValue="class-10a">
+        <TabsList>
+          <TabsTrigger value="class-10a">Class 10-A</TabsTrigger>
+          <TabsTrigger value="class-10b">Class 10-B</TabsTrigger>
+        </TabsList>
+        <TabsContent value="class-10a" className="mt-4">
+          <Dashboard studentData={students10A} />
+        </TabsContent>
+        <TabsContent value="class-10b" className="mt-4">
+          <Dashboard studentData={students10B} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
