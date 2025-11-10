@@ -1,6 +1,8 @@
 
-import { getSession } from "@/lib/auth";
-import { redirect } from "next/navigation";
+'use client';
+
+import { useUser } from '@/firebase';
+import { redirect } from 'next/navigation';
 import { UploadForm } from "@/components/upload/upload-form";
 import {
   Card,
@@ -10,9 +12,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export default async function UploadPage() {
-  const session = await getSession();
-  if (!session) {
+export default function UploadPage() {
+  const { user, isUserLoading } = useUser();
+
+  if (isUserLoading) {
+    return <div>Loading...</div>; // Or a spinner
+  }
+
+  if (!user) {
     redirect("/login");
   }
 

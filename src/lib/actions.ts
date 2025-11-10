@@ -2,7 +2,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { login as authLogin, logout as authLogout } from "@/lib/auth";
+import { loginWithCredentials, signupWithCredentials, signOut } from "@/lib/auth";
 import type { ZodError } from 'zod';
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -33,17 +33,34 @@ export async function login(prevState: FormState, formData: FormData): Promise<F
     return { message: "Email and password are required." };
   }
 
-  const result = await authLogin(email, password);
+  const result = await loginWithCredentials(email, password);
 
   if (!result.success) {
-    return { message: result.error };
+    return { message: result.error ?? "An unknown error occurred." };
+  }
+
+  redirect("/");
+}
+
+export async function signup(prevState: FormState, formData: FormData): Promise<FormState> {
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+
+  if (!email || !password) {
+    return { message: "Email and password are required." };
+  }
+
+  const result = await signupWithCredentials(email, password);
+
+  if (!result.success) {
+    return { message: result.error ?? "An unknown error occurred." };
   }
 
   redirect("/");
 }
 
 export async function logout() {
-  await authLogout();
+  await signOut();
   redirect("/login");
 }
 

@@ -2,10 +2,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { LoginForm } from "@/components/auth/login-form";
+import { SignupForm } from "@/components/auth/signup-form";
 import { GraduationCap } from "lucide-react";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const loginImage = PlaceHolderImages.find((img) => img.id === "login-hero");
 
   return (
@@ -13,16 +13,16 @@ export default function LoginPage() {
       <div className="flex items-center justify-center py-12">
         <div className="mx-auto grid w-[350px] gap-6">
           <div className="grid gap-2 text-center">
-            <h1 className="text-3xl font-bold">Login</h1>
+            <h1 className="text-3xl font-bold">Sign Up</h1>
             <p className="text-balance text-muted-foreground">
-              Enter your email below to login to your account
+              Enter your information to create an account
             </p>
           </div>
-          <LoginForm />
+          <SignupForm />
           <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="underline">
-              Sign up
+            Already have an account?{" "}
+            <Link href="/login" className="underline">
+              Login
             </Link>
           </div>
         </div>

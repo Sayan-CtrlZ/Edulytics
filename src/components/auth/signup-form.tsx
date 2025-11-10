@@ -3,11 +3,10 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { login, type FormState } from "@/lib/actions";
+import { signup, type FormState } from "@/lib/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
 
@@ -15,14 +14,14 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? "Signing In..." : "Login"}
+      {pending ? "Creating Account..." : "Sign Up"}
     </Button>
   );
 }
 
-export function LoginForm() {
+export function SignupForm() {
   const initialState: FormState = { message: "" };
-  const [state, dispatch] = useActionState(login, initialState);
+  const [state, dispatch] = useActionState(signup, initialState);
 
   return (
     <form action={dispatch} className="grid gap-4">
@@ -41,14 +40,11 @@ export function LoginForm() {
           type="email"
           placeholder="teacher@school.edu"
           required
-          defaultValue="teacher@school.edu"
         />
       </div>
       <div className="grid gap-2">
-        <div className="flex items-center">
-          <Label htmlFor="password">Password</Label>
-        </div>
-        <Input id="password" name="password" type="password" required defaultValue="password123" />
+        <Label htmlFor="password">Password</Label>
+        <Input id="password" name="password" type="password" required />
       </div>
       <SubmitButton />
     </form>
