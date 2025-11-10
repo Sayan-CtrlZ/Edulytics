@@ -31,7 +31,7 @@ const menuItems = [
 const secondaryMenuItems = [
     { href: "/account", label: "Account", icon: ShieldCheck },
     { href: "/settings", label: "Settings", icon: Settings },
-    { href: "/support", label: "Support", icon: LifeBuoy, disabled: true },
+    { href: "/support", label: "Support", icon: LifeBuoy },
 ]
 
 export function SidebarNav() {
