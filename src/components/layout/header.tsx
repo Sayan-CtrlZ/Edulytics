@@ -26,7 +26,7 @@ export function Header() {
       {!isMobile && <div className="h-full w-px bg-border max-md:hidden" />}
       <div className="flex-1" />
       {!isMobile && (
-        <div className="text-sm font-medium pr-4">{instituteName}</div>
+        <div className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">{instituteName}</div>
       )}
       <UserNav />
     </header>
