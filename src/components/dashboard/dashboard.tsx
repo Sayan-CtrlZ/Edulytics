@@ -23,15 +23,11 @@ interface DashboardProps {
 
 export default function Dashboard({ studentData }: DashboardProps) {
   const [stats, setStats] = useState<Stats | null>(null);
-  const [chartData, setChartData] = useState<{ name: string; marks: number }[]>([]);
 
   useEffect(() => {
     if (studentData) {
       const calculatedStats = calculateStatistics(studentData);
-      const newChartData = studentData.map(s => ({ name: s.studentName, marks: s.marks }));
-      
       setStats(calculatedStats);
-      setChartData(newChartData);
     }
   }, [studentData]);
 
@@ -54,7 +50,7 @@ export default function Dashboard({ studentData }: DashboardProps) {
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <StudentsChart data={chartData} />
+          <StudentsChart data={studentData} />
         </div>
         <div>
           <StudentsTable data={studentData} />
