@@ -16,7 +16,6 @@ import { collection, writeBatch, doc } from "firebase/firestore";
 type StudentMark = {
   id: number;
   studentName: string;
-  subject: string;
   marks: string;
 };
 
@@ -25,6 +24,7 @@ export function DataInputSheet() {
   const [nextId, setNextId] = useState(1);
   const [classValue, setClassValue] = useState("");
   const [sectionValue, setSectionValue] = useState("");
+  const [subjectValue, setSubjectValue] = useState("");
   const [isSaved, setIsSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -33,7 +33,7 @@ export function DataInputSheet() {
   const router = useRouter();
 
 
-  const handleInputChange = (id: number, field: keyof StudentMark, value: string) => {
+  const handleInputChange = (id: number, field: 'studentName' | 'marks', value: string) => {
     setData(currentData =>
       currentData.map(row => (row.id === id ? { ...row, [field]: value } : row))
     );
@@ -43,7 +43,7 @@ export function DataInputSheet() {
   const addRow = () => {
     setData(currentData => [
       ...currentData,
-      { id: nextId, studentName: "", subject: "", marks: "" },
+      { id: nextId, studentName: "", marks: "" },
     ]);
     setNextId(prevId => prevId + 1);
     setIsSaved(false);
@@ -72,14 +72,12 @@ export function DataInputSheet() {
         const parsedData = results.data
           .map((row, index) => {
             const studentName = row.studentName || row.StudentName || row.name || row.Name;
-            const subject = row.subject || row.Subject;
             const marks = row.marks || row.Marks || row.score || row.Score;
 
-            if (studentName && subject && marks) {
+            if (studentName && marks) {
               return {
                 id: nextId + index,
                 studentName: String(studentName),
-                subject: String(subject),
                 marks: String(marks),
               };
             }
@@ -127,8 +125,8 @@ export function DataInputSheet() {
       toast({ variant: "destructive", title: "Error", description: "Could not connect to the database." });
       return;
     }
-    if (!classValue || !sectionValue) {
-      toast({ variant: "destructive", title: "Validation Error", description: "Please provide a class and section." });
+    if (!classValue || !sectionValue || !subjectValue) {
+      toast({ variant: "destructive", title: "Validation Error", description: "Please provide a class, section, and subject." });
       return;
     }
     if(data.length === 0) {
@@ -141,7 +139,7 @@ export function DataInputSheet() {
     const batch = writeBatch(firestore);
 
     data.forEach(row => {
-        if (row.studentName && row.subject && row.marks) {
+        if (row.studentName && row.marks) {
             const newMarkRef = doc(marksCollection);
             const markData = {
                 id: newMarkRef.id,
@@ -150,7 +148,7 @@ export function DataInputSheet() {
                 studentName: row.studentName,
                 class: classValue,
                 section: sectionValue,
-                subject: row.subject,
+                subject: subjectValue,
                 marks: Number(row.marks),
                 dateTaken: new Date().toISOString(),
             };
@@ -165,6 +163,8 @@ export function DataInputSheet() {
             description: "The student data has been successfully saved.",
         });
         setIsSaved(true);
+        setData([]);
+        setNextId(1);
     } catch (error: any) {
         console.error("Error saving data:", error);
         toast({
@@ -192,12 +192,12 @@ export function DataInputSheet() {
       <CardHeader>
         <CardTitle>Data Entry Sheet</CardTitle>
         <CardDescription>
-          Specify the class and section, then add records or upload a CSV with columns: studentName, subject, marks.
+          Specify the class, section, and subject, then add records or upload a CSV with columns: studentName, marks.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-            <div className="flex gap-2 items-center">
+            <div className="flex flex-wrap gap-2 items-center">
                 <Input
                     value={classValue}
                     onChange={e => { setClassValue(e.target.value); setIsSaved(false); }}
@@ -208,6 +208,12 @@ export function DataInputSheet() {
                     value={sectionValue}
                     onChange={e => { setSectionValue(e.target.value); setIsSaved(false); }}
                     placeholder="Section (e.g., A)"
+                    className="w-32"
+                />
+                 <Input
+                    value={subjectValue}
+                    onChange={e => { setSubjectValue(e.target.value); setIsSaved(false); }}
+                    placeholder="Subject (e.g., Math)"
                     className="w-32"
                 />
             </div>
@@ -245,9 +251,8 @@ export function DataInputSheet() {
           <Table>
             <TableHeader className="sticky top-0 bg-muted/50">
               <TableRow>
-                <TableHead className="w-[50%]">Student Name</TableHead>
-                <TableHead className="w-[30%]">Subject</TableHead>
-                <TableHead className="w-[10%]">Marks</TableHead>
+                <TableHead className="w-[70%]">Student Name</TableHead>
+                <TableHead className="w-[20%]">Marks</TableHead>
                 <TableHead className="w-[10%] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -259,14 +264,6 @@ export function DataInputSheet() {
                       value={row.studentName}
                       onChange={e => handleInputChange(row.id, "studentName", e.target.value)}
                       placeholder="e.g. John Doe"
-                      className="border-none focus-visible:ring-1"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      value={row.subject}
-                      onChange={e => handleInputChange(row.id, "subject", e.target.value)}
-                      placeholder="e.g. Science"
                       className="border-none focus-visible:ring-1"
                     />
                   </TableCell>
