@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
 import { redirect } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -30,6 +30,7 @@ export default function ProfilePage() {
 
   const [displayName, setDisplayName] = useState('');
   const [instituteName, setInstituteName] = useState('');
+  const [instituteAddress, setInstituteAddress] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
@@ -43,6 +44,7 @@ export default function ProfilePage() {
     }
     if (userData) {
       setInstituteName((userData as any).instituteName ?? '');
+      setInstituteAddress((userData as any).instituteAddress ?? '');
     }
   }, [user, userData]);
 
@@ -86,7 +88,16 @@ export default function ProfilePage() {
       await updateProfile(auth.currentUser, { displayName, photoURL });
       
       const userDocRef = doc(firestore, `users/${user.uid}`);
-      await setDoc(userDocRef, { instituteName }, { merge: true });
+      const profileData = { instituteName, instituteAddress };
+      
+      setDoc(userDocRef, profileData, { merge: true }).catch((err) => {
+        const permissionError = new FirestorePermissionError({
+            path: userDocRef.path,
+            operation: 'update',
+            requestResourceData: profileData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
 
       toast({
         title: 'Success',
@@ -112,6 +123,7 @@ export default function ProfilePage() {
     }
     if (userData) {
       setInstituteName((userData as any).instituteName ?? '');
+      setInstituteAddress((userData as any).instituteAddress ?? '');
     }
   }
 
@@ -160,6 +172,10 @@ export default function ProfilePage() {
              <div className="grid gap-2">
                 <Label htmlFor="instituteName">Institute Name</Label>
                 <Input id="instituteName" value={instituteName} onChange={(e) => setInstituteName(e.target.value)} />
+            </div>
+            <div className="grid gap-2 md:col-span-2">
+                <Label htmlFor="instituteAddress">Institute Address</Label>
+                <Input id="instituteAddress" value={instituteAddress} onChange={(e) => setInstituteAddress(e.target.value)} />
             </div>
             <div className="grid gap-2 md:col-span-2">
                 <Label htmlFor="email">Email</Label>

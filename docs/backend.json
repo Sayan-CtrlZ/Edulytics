@@ -10,6 +10,10 @@
         "instituteName": {
           "type": "string",
           "description": "The name of the user's institute or school."
+        },
+        "instituteAddress": {
+          "type": "string",
+          "description": "The address of the user's institute or school."
         }
       },
       "required": []

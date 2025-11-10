@@ -9,27 +9,62 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, Eye, EyeOff } from "lucide-react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { useAuth } from "@/firebase";
+import { useAuth, useFirestore, FirestorePermissionError, errorEmitter } from "@/firebase";
+import { doc, setDoc } from 'firebase/firestore';
 
 export function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [instituteName, setInstituteName] = useState("");
+  const [instituteAddress, setInstituteAddress] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!firestore) {
+      setError("Cannot connect to the database.");
+      return;
+    }
     setError(null);
     setIsLoading(true);
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Now create the user profile document in Firestore
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const profileData = {
+        instituteName: instituteName,
+        instituteAddress: instituteAddress
+      };
+      
+      // We are not awaiting this, but we are catching errors
+      setDoc(userDocRef, profileData)
+        .catch(err => {
+           const permissionError = new FirestorePermissionError({
+                path: userDocRef.path,
+                operation: 'create',
+                requestResourceData: profileData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
+
       router.push("/");
     } catch (err: any) {
-      setError("An unexpected error occurred during sign up. Please try again.");
+      if (err.code === 'auth/email-already-in-use') {
+        setError("This email address is already in use.");
+      } else if (err.code === 'auth/weak-password') {
+        setError("The password is too weak. Please use at least 6 characters.");
+      }
+      else {
+        setError("An unexpected error occurred during sign up. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -58,6 +93,30 @@ export function SignupForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
+       <div className="grid gap-2">
+        <Label htmlFor="instituteName">Institute Name</Label>
+        <Input
+          id="instituteName"
+          name="instituteName"
+          type="text"
+          placeholder="e.g., Edulytics University"
+          required
+          value={instituteName}
+          onChange={(e) => setInstituteName(e.target.value)}
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="instituteAddress">Institute Address</Label>
+        <Input
+          id="instituteAddress"
+          name="instituteAddress"
+          type="text"
+          placeholder="e.g., 123 Learning Lane"
+          required
+          value={instituteAddress}
+          onChange={(e) => setInstituteAddress(e.target.value)}
         />
       </div>
       <div className="grid gap-2 relative">
