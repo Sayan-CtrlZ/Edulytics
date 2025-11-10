@@ -11,7 +11,7 @@ import { collection, writeBatch, query, where, getDocs, doc, deleteDoc } from 'f
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Upload, Trash2 } from 'lucide-react';
+import { Upload, Trash2, AreaChart } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from '@/hooks/use-toast';
@@ -146,22 +146,21 @@ export default function DashboardPage() {
 
   if (!allMarks || allMarks.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full">
-          <Card className="w-full max-w-md">
-              <CardHeader>
-                  <CardTitle>No Reports Found</CardTitle>
-                  <CardDescription>
-                      It looks like you haven't uploaded any student data yet. Upload a data file to generate and view reports.
-                  </CardDescription>
-              </CardHeader>
-              <CardContent>
-                  <Button asChild>
-                      <Link href="/upload">
-                          <Upload className="mr-2 h-4 w-4" /> Go to Upload Page
-                      </Link>
-                  </Button>
-              </CardContent>
-          </Card>
+      <div className="flex flex-col items-center justify-center h-full text-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-background/50 backdrop-blur-sm rounded-full p-6 inline-block border-4 border-dashed border-muted mb-6">
+            <AreaChart className="h-20 w-20 text-primary/70" strokeWidth={1.5} />
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome to Your Dashboard!</h2>
+          <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+            It looks like you haven&apos;t analyzed any student data yet. Get started by uploading a data file to generate insightful reports and visualizations.
+          </p>
+          <Button asChild size="lg" className="shadow-lg shadow-primary/20">
+            <Link href="/upload">
+              <Upload className="mr-2 h-5 w-5" /> Upload Your First Report
+            </Link>
+          </Button>
+        </div>
       </div>
     );
   }
