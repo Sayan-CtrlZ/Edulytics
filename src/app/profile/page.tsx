@@ -1,16 +1,24 @@
 
 'use client';
 
-import { useUser } from '@/firebase';
+import { useState } from 'react';
+import { useUser, useAuth } from '@/firebase';
 import { redirect } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { updateProfile } from 'firebase/auth';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const { toast } = useToast();
+  
+  const [displayName, setDisplayName] = useState(user?.displayName ?? '');
+  const [isSaving, setIsSaving] = useState(false);
 
   if (isUserLoading) {
     return <div>Loading...</div>;
@@ -18,6 +26,30 @@ export default function ProfilePage() {
 
   if (!user) {
     redirect('/login');
+  }
+  
+  const handleSaveChanges = async () => {
+    if (!auth.currentUser) return;
+    setIsSaving(true);
+    try {
+      await updateProfile(auth.currentUser, { displayName });
+      toast({
+        title: 'Success',
+        description: 'Your profile has been updated.',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to update profile.',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    setDisplayName(user?.displayName ?? '');
   }
 
   return (
@@ -42,16 +74,18 @@ export default function ProfilePage() {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="grid gap-2">
                 <Label htmlFor="displayName">Display Name</Label>
-                <Input id="displayName" defaultValue={user.displayName ?? ''} />
+                <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue={user.email ?? ''} readOnly />
+                <Input id="email" type="email" defaultValue={user.email ?? ''} readOnly disabled />
             </div>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="outline">Reset</Button>
-            <Button>Save Changes</Button>
+            <Button variant="outline" onClick={handleReset} disabled={isSaving}>Reset</Button>
+            <Button onClick={handleSaveChanges} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </Button>
           </div>
         </CardContent>
       </Card>
