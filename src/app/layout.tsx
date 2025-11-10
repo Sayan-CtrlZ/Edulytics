@@ -9,7 +9,7 @@ import { FirebaseClientProvider } from "@/firebase";
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 
 export const metadata: Metadata = {
-  title: "Student Insights Hub",
+  title: "Edulytics",
   description: "A web-based student analytics tool.",
   icons: [{ rel: "icon", url: "/icon.svg" }],
 };

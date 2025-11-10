@@ -11,6 +11,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  SidebarRail,
 } from "@/components/ui/sidebar";
 import {
   GraduationCap,
@@ -30,11 +31,12 @@ export function SidebarNav() {
   const pathname = usePathname();
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
+      <SidebarRail />
       <SidebarHeader>
         <div className="flex items-center gap-2">
           <GraduationCap className="size-8 text-primary" />
-          <span className="text-lg font-semibold">Insights Hub</span>
+          <span className="text-lg font-semibold group-data-[collapsible=icon]:hidden">Edulytics</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -52,7 +54,7 @@ export function SidebarNav() {
               >
                 <Link href={item.href}>
                   <item.icon />
-                  <span>{item.label}</span>
+                  <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -64,13 +66,13 @@ export function SidebarNav() {
           <SidebarMenuItem>
             <SidebarMenuButton tooltip="Settings" className="justify-start">
               <Settings />
-              <span>Settings</span>
+              <span className="group-data-[collapsible=icon]:hidden">Settings</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton tooltip="Support" className="justify-start">
               <LifeBuoy />
-              <span>Support</span>
+              <span className="group-data-[collapsible=icon]:hidden">Support</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
