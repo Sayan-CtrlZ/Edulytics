@@ -203,28 +203,30 @@ export default function DashboardPage() {
               <Accordion type="single" collapsible className="w-full">
                 {Object.keys(reportData[className]).sort().map(section => (
                   <AccordionItem key={section} value={section}>
-                    <AccordionTrigger className="text-xl font-semibold flex justify-between items-center w-full">
-                      <span>{`Section ${section}`}</span>
-                      <AlertDialog onOpenChange={(open) => open && event.stopPropagation()} >
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-50 hover:opacity-100" onClick={(e) => e.stopPropagation()}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action will permanently delete all reports for Section {section} in Class {className}.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteSectionReport(className, section)}>Delete</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </AccordionTrigger>
+                    <div className="flex justify-between items-center w-full">
+                        <AccordionTrigger className="text-xl font-semibold flex-grow">
+                          <span>{`Section ${section}`}</span>
+                        </AccordionTrigger>
+                        <AlertDialog onOpenChange={(open) => open && event.stopPropagation()} >
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-50 hover:opacity-100 mr-2" onClick={(e) => e.stopPropagation()}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action will permanently delete all reports for Section {section} in Class {className}.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteSectionReport(className, section)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
                     <AccordionContent className="pl-4">
                       {Object.keys(reportData[className][section]).sort().map(subject => (
                         <div key={subject} className="mb-8 p-4 border rounded-lg">
