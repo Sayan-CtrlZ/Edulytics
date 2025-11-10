@@ -53,7 +53,7 @@ export interface UserHookResult { // Renamed from UserAuthHookResult for consist
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
 /**
- * FirebaseProvider manages and provides Firebase services and user authentication state.
+ * FirebaseProvider manages and provides data services and user authentication state.
  */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
@@ -67,7 +67,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     userError: null,
   });
 
-  // Effect to subscribe to Firebase auth state changes
+  // Effect to subscribe to auth state changes
   useEffect(() => {
     if (!auth) { // If no Auth service instance, cannot determine user state
       setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service not provided.") });
@@ -82,7 +82,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
       },
       (error) => { // Auth listener error
-        console.error("FirebaseProvider: onAuthStateChanged error:", error);
+        console.error("Authentication Provider: onAuthStateChanged error:", error);
         setUserAuthState({ user: null, isUserLoading: false, userError: error });
       }
     );
@@ -112,18 +112,18 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 };
 
 /**
- * Hook to access core Firebase services and user authentication state.
+ * Hook to access core services and user authentication state.
  * Throws error if core services are not available or used outside provider.
  */
 export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
 
   if (context === undefined) {
-    throw new Error('useFirebase must be used within a FirebaseProvider.');
+    throw new Error('useFirebase must be used within a application provider.');
   }
 
   if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth) {
-    throw new Error('Firebase core services not available. Check FirebaseProvider props.');
+    throw new Error('Core services not available. Check the application provider props.');
   }
 
   return {
@@ -136,19 +136,19 @@ export const useFirebase = (): FirebaseServicesAndUser => {
   };
 };
 
-/** Hook to access Firebase Auth instance. */
+/** Hook to access Auth instance. */
 export const useAuth = (): Auth => {
   const { auth } = useFirebase();
   return auth;
 };
 
-/** Hook to access Firestore instance. */
+/** Hook to access data store instance. */
 export const useFirestore = (): Firestore => {
   const { firestore } = useFirebase();
   return firestore;
 };
 
-/** Hook to access Firebase App instance. */
+/** Hook to access App instance. */
 export const useFirebaseApp = (): FirebaseApp => {
   const { firebaseApp } = useFirebase();
   return firebaseApp;
