@@ -159,7 +159,7 @@ export default function DashboardPage() {
       <div className="flex flex-col items-center justify-center h-full text-center p-4">
         <div className="w-full max-w-md">
           <div className="bg-background/50 backdrop-blur-sm rounded-full p-6 inline-block border-4 border-dashed border-muted mb-6">
-            <AreaChart className="h-20 w-20 text-primary/70" strokeWidth={1.5} />
+            <Building className="h-20 w-20 text-primary/70" strokeWidth={1.5} />
           </div>
           <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome to Edulytics!</h2>
           <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
@@ -287,3 +287,4 @@ export default function DashboardPage() {
     
 
     
+
