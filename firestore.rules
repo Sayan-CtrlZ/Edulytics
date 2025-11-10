@@ -95,8 +95,8 @@ service cloud.firestore {
      * @principle Enforces school-based ownership and data integrity.
      */
     match /schools/{schoolId}/marks/{markId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn() && request.resource.data.schoolId == schoolId;
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isSignedIn() && request.resource.data.schoolId == schoolId;
     }
 
     /**
