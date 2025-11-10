@@ -3,16 +3,18 @@
 
 import { useState, useRef, ChangeEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PlusCircle, Trash2, Upload, FileCheck, Download } from "lucide-react";
+import { PlusCircle, Trash2, Upload, FileCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Papa from "papaparse";
 import { useFirestore, useUser, FirestorePermissionError, errorEmitter } from "@/firebase";
 import { collection, writeBatch, doc } from "firebase/firestore";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 type StudentMark = {
   id: string; // Use string for IDs coming from edit mode
@@ -40,6 +42,8 @@ export function DataInputSheet() {
   const firestore = useFirestore();
   const { user } = useUser();
   const router = useRouter();
+
+  const csvTemplateImage = PlaceHolderImages.find((img) => img.id === "csv-template-example");
 
   useEffect(() => {
     // Check for edit state in localStorage on component mount
@@ -166,7 +170,6 @@ export function DataInputSheet() {
     const batch = writeBatch(firestore);
     
     let hasValidData = false;
-    const existingIds = data.filter(d => typeof d.id === 'string' && !d.id.startsWith('new-')).map(d => d.id);
 
     data.forEach(row => {
         if (row.studentName && row.marks) {
@@ -220,21 +223,6 @@ export function DataInputSheet() {
   
   const handleViewReport = () => {
       router.push('/');
-  };
-
-  const handleDownloadTemplate = () => {
-    const csvContent = "studentName,marks\nJohn Doe,95\nJane Smith,88\n";
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    if (link.href) {
-        URL.revokeObjectURL(link.href);
-    }
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.setAttribute("download", "student_marks_template.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   return (
@@ -300,13 +288,9 @@ export function DataInputSheet() {
                 <Upload className="mr-2" />
                 Upload CSV
             </Button>
-             <Button onClick={handleDownloadTemplate} size="sm" variant="outline">
-                <Download className="mr-2" />
-                Download Template
-            </Button>
           </div>
         </div>
-        <div className="overflow-auto rounded-md border" style={{maxHeight: '60vh'}}>
+        <div className="overflow-auto rounded-md border" style={{maxHeight: '40vh'}}>
           <Table>
             <TableHeader className="sticky top-0 bg-muted/50">
               <TableRow>
@@ -355,6 +339,21 @@ export function DataInputSheet() {
                 <p>The table is empty. Click "Add Row" or "Upload CSV" to get started.</p>
             </div>
         )}
+        <div className="mt-8">
+            <h3 className="text-lg font-medium mb-2">CSV Upload Format Example</h3>
+            {csvTemplateImage && (
+              <div className="relative w-full max-w-md rounded-md border overflow-hidden">
+                <Image
+                    src={csvTemplateImage.imageUrl}
+                    alt={csvTemplateImage.description}
+                    data-ai-hint={csvTemplateImage.imageHint}
+                    width={600}
+                    height={150}
+                    className="object-contain"
+                />
+              </div>
+            )}
+        </div>
       </CardContent>
     </Card>
   );

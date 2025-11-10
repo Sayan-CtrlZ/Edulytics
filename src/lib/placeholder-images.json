@@ -5,6 +5,12 @@
       "description": "Abstract geometric patterns for a modern tech feel on a login screen.",
       "imageUrl": "https://images.unsplash.com/photo-1642516303080-431f6681f864?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxhYnN0cmFjdCUyMGRhdGF8ZW58MHx8fHwxNzYyNzAyODU0fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "abstract data"
+    },
+    {
+      "id": "csv-template-example",
+      "description": "An example image showing the CSV format with studentName and marks columns.",
+      "imageUrl": "https://placehold.co/600x150/f0f9ff/4b5563/png?text=studentName,marks%5CnJohn%20Doe,95%5CnJane%20Smith,88",
+      "imageHint": "spreadsheet data"
     }
   ]
 }
