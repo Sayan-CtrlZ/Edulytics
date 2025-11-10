@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -40,7 +39,7 @@ export function SidebarNav() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <div className="mt-auto">
+        <div>
           <SidebarMenu>
             {menuItems.map((item) => (
               <SidebarMenuItem key={item.href}>
