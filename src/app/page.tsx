@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useUser, useFirestore, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { redirect } from 'next/navigation';
 import Dashboard from '@/components/dashboard/dashboard';
 import { useMemo, useState } from 'react';
@@ -11,7 +11,7 @@ import { collection, writeBatch, query, where, getDocs, doc, deleteDoc } from 'f
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Upload, Trash2, AreaChart } from 'lucide-react';
+import { Upload, Trash2, AreaChart, Building } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +29,15 @@ export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, `users/${user.uid}`);
+  }, [firestore, user]);
+
+  const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
+  const instituteName = (userData as any)?.instituteName || 'Your Institute';
+
 
   const schoolId = "school-1"; 
   
@@ -133,7 +142,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (isUserLoading || isMarksLoading) {
+  if (isUserLoading || isMarksLoading || isUserDataLoading) {
     return <div>Loading...</div>;
   }
 
@@ -152,7 +161,7 @@ export default function DashboardPage() {
           <div className="bg-background/50 backdrop-blur-sm rounded-full p-6 inline-block border-4 border-dashed border-muted mb-6">
             <AreaChart className="h-20 w-20 text-primary/70" strokeWidth={1.5} />
           </div>
-          <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome to Your Dashboard!</h2>
+          <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome to {instituteName}!</h2>
           <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
             It looks like you haven&apos;t analyzed any student data yet. Get started by uploading a data file to generate insightful reports and visualizations.
           </p>
@@ -168,7 +177,13 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-4 sm:gap-8">
-      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+      <div className='space-y-1'>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <div className='flex items-center gap-2 text-muted-foreground'>
+            <Building className='h-5 w-5' />
+            <p>{instituteName}</p>
+        </div>
+      </div>
       
       {classes.length > 0 && (
         <Tabs value={activeClassTab} onValueChange={setActiveClassTab} className="w-full">
@@ -271,5 +286,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     
