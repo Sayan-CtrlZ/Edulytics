@@ -25,23 +25,25 @@ export default function Dashboard({ studentData }: DashboardProps) {
   const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
-    if (studentData) {
+    if (studentData && studentData.length > 0) {
       const calculatedStats = calculateStatistics(studentData);
       setStats(calculatedStats);
+    } else {
+      setStats(null);
     }
   }, [studentData]);
 
-  if (!stats) {
-    return <div>Loading dashboard data...</div>; // Or a spinner
-  }
-
-  if (studentData.length === 0) {
+  if (!studentData || studentData.length === 0) {
     return (
         <div className="text-center p-8 text-muted-foreground">
             <h2 className="text-xl font-semibold mb-2">No Data Available</h2>
             <p>There is no student data for this class yet. Go to the "Upload Data" page to add records.</p>
         </div>
     )
+  }
+
+  if (!stats) {
+    return <div>Loading dashboard data...</div>; // Or a spinner
   }
 
   return (
