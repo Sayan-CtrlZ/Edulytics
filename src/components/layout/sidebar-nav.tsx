@@ -40,26 +40,28 @@ export function SidebarNav() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === item.href}
-                tooltip={item.label}
-                className={cn(
-                  "justify-start",
-                  pathname === item.href && "bg-primary/10 text-primary"
-                )}
-              >
-                <Link href={item.href}>
-                  <item.icon />
-                  <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+        <div className="mt-auto">
+          <SidebarMenu>
+            {menuItems.map((item) => (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === item.href}
+                  tooltip={item.label}
+                  className={cn(
+                    "justify-start",
+                    pathname === item.href && "bg-primary/10 text-primary"
+                  )}
+                >
+                  <Link href={item.href}>
+                    <item.icon />
+                    <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </div>
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
