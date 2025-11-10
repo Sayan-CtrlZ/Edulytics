@@ -161,7 +161,7 @@ export default function DashboardPage() {
           <div className="bg-background/50 backdrop-blur-sm rounded-full p-6 inline-block border-4 border-dashed border-muted mb-6">
             <AreaChart className="h-20 w-20 text-primary/70" strokeWidth={1.5} />
           </div>
-          <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome to {instituteName}!</h2>
+          <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome to Edulytics!</h2>
           <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
             It looks like you haven&apos;t analyzed any student data yet. Get started by uploading a data file to generate insightful reports and visualizations.
           </p>
@@ -179,10 +179,7 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-4 sm:gap-8">
       <div className='space-y-1'>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <div className='flex items-center gap-2 text-muted-foreground'>
-            <Building className='h-5 w-5' />
-            <p>{instituteName}</p>
-        </div>
+        <p className="text-muted-foreground">Welcome to your student analytics dashboard.</p>
       </div>
       
       {classes.length > 0 && (

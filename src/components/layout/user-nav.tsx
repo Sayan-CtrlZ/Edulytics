@@ -11,44 +11,42 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { LogOut, Settings, User as UserIcon, ShieldCheck, GraduationCap } from "lucide-react";
+import { useAuth, useUser } from "@/firebase";
+import { LogOut, Settings, User as UserIcon, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { doc } from "firebase/firestore";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function UserNav() {
   const { user } = useUser();
   const auth = useAuth();
-  const firestore = useFirestore();
   const router = useRouter();
-
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, `users/${user.uid}`);
-  }, [firestore, user]);
-
-  const { data: userData } = useDoc(userDocRef);
 
   const handleLogout = async () => {
     await auth.signOut();
     router.push("/login");
   };
 
-  const instituteName = (userData as any)?.instituteName;
+  const getInitials = (email: string | null | undefined) => {
+    if (!email) return "U";
+    return email[0].toUpperCase();
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full border-2 border-primary/50 hover:border-primary">
-          <GraduationCap className="h-6 w-6 text-primary" />
+        <Button variant="outline" className="relative h-10 w-10 rounded-full border-primary/50 hover:border-primary">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={user?.photoURL ?? ""} alt="@user" />
+            <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
+          </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {instituteName || "Institute"}
+              My Account
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {user?.email ?? "teacher@school.edu"}
