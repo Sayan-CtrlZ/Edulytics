@@ -92,12 +92,14 @@ service cloud.firestore {
      * Write operations are restricted to ensure data integrity.
      * @path /schools/{schoolId}/marks/{markId}
      * @allow (read): if isSignedIn() - Allows any authenticated user to read marks.
-     * @allow (write): if isSignedIn() && request.resource.data.schoolId == schoolId - Ensures data integrity on write.
+     * @allow (create, update): if isSignedIn() && request.resource.data.schoolId == schoolId - Ensures data integrity on write.
+     * @allow (delete): if isSignedIn() && resource.data.schoolId == schoolId - Ensures data integrity on delete.
      * @principle Enforces school-based ownership and data integrity.
      */
     match /schools/{schoolId}/marks/{markId} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn() && request.resource.data.schoolId == schoolId;
+      allow create, update: if isSignedIn() && request.resource.data.schoolId == schoolId;
+      allow delete: if isSignedIn() && resource.data.schoolId == schoolId;
     }
 
     /**
