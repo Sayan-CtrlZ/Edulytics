@@ -11,7 +11,7 @@ import { collection, writeBatch, query, where, getDocs, doc, deleteDoc } from 'f
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Upload, Trash2, AreaChart, Building } from 'lucide-react';
+import { Upload, Trash2, Building } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from '@/hooks/use-toast';
@@ -42,9 +42,9 @@ export default function DashboardPage() {
   const schoolId = "school-1"; 
   
   const marksQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null; // Wait for user authentication
     return collection(firestore, `schools/${schoolId}/marks`);
-  }, [firestore, schoolId]);
+  }, [firestore, schoolId, user]);
 
   const { data: allMarks, isLoading: isMarksLoading, error } = useCollection<Mark>(marksQuery);
 
@@ -287,4 +287,5 @@ export default function DashboardPage() {
     
 
     
+
 
