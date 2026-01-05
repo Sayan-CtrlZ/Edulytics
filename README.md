@@ -2,6 +2,8 @@
 
 Edulytics turns raw student mark sheets (Excel/CSV) into an interactive analytics dashboard. Upload a file, map columns, and explore per-subject and per-student insights (mean, median, mode, max, min, trends, and outliers). The app is built on Next.js, Firebase, and Cloudinary for fast, secure delivery. The repo is split into `client/` (Next.js frontend) and `server/` (Firebase/Genkit/Express backend assets).
 
+##Live Link : https://edulytics.vercel.app
+
 ## Tech Stack
 ![Next.js](https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
