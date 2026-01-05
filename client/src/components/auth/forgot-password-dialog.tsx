@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +17,7 @@ import { Terminal, Check } from "lucide-react";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { useAuth } from "@/firebase";
 
-export function ForgotPasswordDialog() {
+function ForgotPasswordDialogContent() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -106,5 +106,13 @@ export function ForgotPasswordDialog() {
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function ForgotPasswordDialog() {
+  return (
+    <Suspense fallback={<Button variant="link" className="p-0 h-auto font-normal" disabled>Forgot password?</Button>}>
+      <ForgotPasswordDialogContent />
+    </Suspense>
   );
 }
