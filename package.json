@@ -4,13 +4,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 9002",
-    "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
-    "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
-    "build": "NODE_ENV=production next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "dev": "npm run dev:client",
+    "dev:client": "cd client && next dev --turbopack -p 9002",
+    "genkit:dev": "cd server/genkit && genkit start -- tsx dev.ts",
+    "genkit:watch": "cd server/genkit && genkit start -- tsx --watch dev.ts",
+    "build": "cd client && NODE_ENV=production next build",
+    "start": "cd client && next start",
+    "lint": "cd client && next lint",
+    "typecheck": "cd client && tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.20.0",

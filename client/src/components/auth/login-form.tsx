@@ -27,7 +27,7 @@ export function LoginForm() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/");
+      router.push("/dashboard");
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
         setError("Invalid credentials. Please check your email and password.");

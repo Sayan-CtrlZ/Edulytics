@@ -15,7 +15,9 @@
 
 # next.js
 /.next/
+/client/.next/
 /out/
+/client/out/
 
 # production
 /build
@@ -39,6 +41,7 @@ next-env.d.ts
 
 .genkit/*
 .env*
+!client/.env.example
 
 # firebase
 firebase-debug.log
