@@ -10,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, Eye, EyeOff } from "lucide-react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/firebase";
+import { ForgotPasswordDialog } from "./forgot-password-dialog";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -65,7 +66,10 @@ export function LoginForm() {
         />
       </div>
       <div className="grid gap-2 relative">
-        <Label htmlFor="password">Password</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Password</Label>
+          <ForgotPasswordDialog />
+        </div>
         <Input
           id="password"
           name="password"
